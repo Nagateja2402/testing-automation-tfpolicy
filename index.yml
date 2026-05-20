@@ -1,0 +1,623 @@
+# regression-testing/tests/index.yml
+# Source of truth for every test case and its per-level expected outcome.
+# Fields:
+#   id:          test case directory name under tests/
+#   description: human-readable summary of what the test covers
+#   suite:       suite prefix (e.g. GR-DEP, PP-PROV)
+#   expect:
+#     tfpolicy_test: PASS | FAIL | UNKNOWN | VALIDATION_ERROR | ERROR_CONTAINS: <text> | N/A
+#     tfp_plan:      PASS | FAIL | UNKNOWN | N/A
+#     tfp_apply:     PASS | FAIL | UNKNOWN | N/A
+
+version: 1
+
+test_cases:
+
+  # ── EC-ENF: Enforcement edge cases ──────────────────────────────────────────
+  - id: EC-ENF-001
+    description: multiple enforce blocks select worst result
+    suite: EC-ENF
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: EC-ENF-002
+    description: info-level message does not block pass
+    suite: EC-ENF
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: EC-ENF-003
+    description: error-level message causes failure
+    suite: EC-ENF
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── EC-GR: getresources edge cases ──────────────────────────────────────────
+  - id: EC-GR-001
+    description: getresources() used inside a filter expression
+    suite: EC-GR
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: EC-GR-002
+    description: getresources() out-of-bounds index access
+    suite: EC-GR
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: EC-GR-003
+    description: getresources() with null filter value
+    suite: EC-GR
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: EC-GR-004
+    description: getresources() with wrong-type filter value
+    suite: EC-GR
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: EC-GR-005
+    description: getresources() used inside a for expression
+    suite: EC-GR
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── EC-OP: Operations edge cases ────────────────────────────────────────────
+  - id: EC-OP-001
+    description: duplicate operation declarations cause a validation error
+    suite: EC-OP
+    expect:
+      tfpolicy_test: VALIDATION_ERROR
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: EC-OP-002
+    description: empty operations list is accepted
+    suite: EC-OP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── EL: Enforcement levels ───────────────────────────────────────────────────
+  - id: EL-ADV-001
+    description: advisory enforcement level allows non-compliant resources
+    suite: EL
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: EL-MND-001
+    description: mandatory enforcement level blocks non-compliant resources
+    suite: EL
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: EL-MOV-001
+    description: mandatory_overridable enforcement level can be overridden
+    suite: EL
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: EL-RES-001
+    description: enforcement level override changes effective level
+    suite: EL
+    expect:
+      tfpolicy_test: FAIL
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── FB-FLT: Filter behavior ──────────────────────────────────────────────────
+  - id: FB-FLT-001
+    description: filter with false condition skips resource
+    suite: FB-FLT
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: FB-FLT-002
+    description: filter with true condition includes resource and causes failure
+    suite: FB-FLT
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: FB-FLT-003
+    description: filter referencing undefined local triggers validation error
+    suite: FB-FLT
+    expect:
+      tfpolicy_test: VALIDATION_ERROR
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── GR-DEP: getresources() dependency resolution ────────────────────────────
+  - id: GR-DEP-001
+    description: getresources() resolves vpc_id from aws_flow_log to aws_vpc
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: GR-DEP-002
+    description: getresources() resolves s3_bucket_name from aws_cloudtrail to aws_s3_bucket
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: GR-DEP-006
+    description: getresources() correctly rejects non-compliant flow log
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: GR-DEP-007
+    description: getresources() with empty filter returns all resources
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: GR-DEP-008
+    description: getresources() with multiple filter conditions
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: GR-DEP-009
+    description: getresources() with partial filter match
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: GR-DEP-010
+    description: chained getresources() calls across three resource types
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: GR-DEP-011
+    description: cycle detection in getresources() dependency graph
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: ycle"
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: GR-DEP-012
+    description: getresources() with unknown resource type returns empty
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: GR-DEP-013
+    description: skip_resource attribute prevents resource from being evaluated
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: GR-DEP-014
+    description: multiple policies each calling getresources() independently
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: GR-DEP-015
+    description: getresources() resolution through locals chain
+    suite: GR-DEP
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  # ── GR-PLAN: getresources() at plan vs apply time ───────────────────────────
+  - id: GR-PLAN-001
+    description: computed id is unknown at plan; filter produces unknown result
+    suite: GR-PLAN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: UNKNOWN
+      tfp_apply: PASS
+
+  - id: GR-PLAN-002
+    description: computed id is resolved at apply time
+    suite: GR-PLAN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: PASS
+
+  - id: GR-PLAN-003
+    description: config-known filter value resolves correctly at plan
+    suite: GR-PLAN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: GR-PLAN-004
+    description: plan-time unknown becomes known at apply and is allowed
+    suite: GR-PLAN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: GR-PLAN-005
+    description: policy denies at both plan and apply time
+    suite: GR-PLAN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: GR-PLAN-006
+    description: no matching resources causes denial
+    suite: GR-PLAN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  # ── OP-ALL: All-operations policies ─────────────────────────────────────────
+  - id: OP-ALL-001
+    description: policy applies to all operations — create resource passes
+    suite: OP-ALL
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-ALL-002
+    description: policy applies to all operations — update resource passes
+    suite: OP-ALL
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── OP-CRE: Create-scoped policies ──────────────────────────────────────────
+  - id: OP-CRE-001
+    description: create policy passes when required tag present
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-CRE-002
+    description: create policy fails when required tag missing
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-CRE-003
+    description: create policy skipped for update operation
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── OP-DEL: Delete-scoped policies ──────────────────────────────────────────
+  - id: OP-DEL-001
+    description: delete policy passes when approval tag present
+    suite: OP-DEL
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-DEL-002
+    description: delete policy fails when approval tag missing
+    suite: OP-DEL
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-DEL-003
+    description: delete policy skipped for create operation
+    suite: OP-DEL
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── OP-ERR: Error prior state ────────────────────────────────────────────────
+  - id: OP-ERR-001
+    description: error prior state with no operations declared
+    suite: OP-ERR
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-ERR-002
+    description: error prior state with create operation declared
+    suite: OP-ERR
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── OP-INF: Operation inference ──────────────────────────────────────────────
+  - id: OP-INF-001
+    description: operation inferred as create when prior state is absent
+    suite: OP-INF
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-INF-002
+    description: operation inferred as update when prior state present
+    suite: OP-INF
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-INF-003
+    description: operation inferred as delete when planned state is absent
+    suite: OP-INF
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-INF-004
+    description: explicit operation declaration overrides inference
+    suite: OP-INF
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── OP-UPD: Update-scoped policies ──────────────────────────────────────────
+  - id: OP-UPD-001
+    description: update policy passes when immutable field unchanged
+    suite: OP-UPD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-UPD-002
+    description: update policy fails when immutable field changed
+    suite: OP-UPD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: OP-UPD-003
+    description: update policy skipped for create operation
+    suite: OP-UPD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── PP-MOD: Module pre-plan policies ────────────────────────────────────────
+  - id: PP-MOD-001
+    description: module_policy passes for approved module source
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: PP-MOD-002
+    description: module_policy blocks unapproved module source
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: PP-MOD-003
+    description: module_policy checks minimum version constraint
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: N/A
+
+  - id: PP-MOD-004
+    description: module_policy passes for compliant module version
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: N/A
+
+  # ── PP-PROV: Provider pre-plan policies ─────────────────────────────────────
+  - id: PP-PROV-001
+    description: provider_policy passes for allowed AWS region
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: PP-PROV-002
+    description: provider_policy blocks disallowed AWS region
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: PP-PROV-003
+    description: provider_policy checks required provider version constraint
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: PP-PROV-004
+    description: provider_policy inspects provider configuration attributes
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: PP-PROV-005
+    description: provider_policy targets a specific named provider
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  # ── REG-BIN: Binary regression ──────────────────────────────────────────────
+  - id: REG-BIN-001
+    description: pre-existing passing policy continues to pass
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: REG-BIN-002
+    description: pre-existing failing policy continues to fail
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: REG-BIN-003
+    description: output format is stable across versions
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: REG-BIN-004
+    description: provider regression — existing provider policy behavior unchanged
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: REG-BIN-005
+    description: module regression — existing module policy behavior unchanged
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: REG-BIN-006
+    description: getresources() with dynamic value resolves correctly
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: REG-BIN-007
+    description: operation inference regression — existing behavior unchanged
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: REG-BIN-008
+    description: topological ordering of resource evaluation is stable
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: REG-BIN-009
+    description: enforcement level regression — existing behavior unchanged
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: REG-BIN-010
+    description: large policy file with many rules evaluates correctly
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # ── TF-E2E: End-to-end create → plan → apply → destroy lifecycle ────────────
+  - id: TF-E2E-001
+    description: e2e — compliant resource passes plan and apply
+    suite: TF-E2E
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: TF-E2E-002
+    description: e2e — non-compliant resource is blocked at plan and apply
+    suite: TF-E2E
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: TF-E2E-003
+    description: e2e — unknown value at plan resolves to pass at apply
+    suite: TF-E2E
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS

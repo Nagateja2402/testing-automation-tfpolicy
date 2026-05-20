@@ -1,0 +1,11 @@
+# Terraform state files
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# Test results
+results/
+
+#opencode files
+.opencode
