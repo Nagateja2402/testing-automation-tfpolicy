@@ -106,16 +106,9 @@ func (c *Client) DeleteWorkspace(ctx context.Context, wsID string) error {
 // Policy Set (VCS-backed)
 // ---------------------------------------------------------------------------
 
-const (
-	// vcsRepoIdentifier is the GitHub repo that holds all regression test policies.
-	vcsRepoIdentifier = "Nagateja2402/tfpolicy-regression-tests"
-	// vcsRepoBranch is the branch to ingest policies from.
-	vcsRepoBranch = "main"
-)
-
 // CreatePolicySet creates a VCS-backed tfpolicy policy set scoped to a single
-// workspace. Each test case has its policy file in a subdirectory named after
-// the test case ID inside the GitHub repo.
+// workspace. Each test case has its policy files under tests/<testID>/ inside
+// the repo, matching the layout of this repository (testing-automation-tfpolicy).
 //
 // The go-tfe SDK does not support the tfpolicy kind or evaluation-stages, so
 // this method uses raw JSON:API HTTP calls throughout.
@@ -132,11 +125,12 @@ func (c *Client) CreatePolicySet(ctx context.Context, name, testID, wsID string)
 				"kind":   "tfpolicy",
 				"global": false,
 				"vcs-repo": map[string]interface{}{
-					"identifier":     vcsRepoIdentifier,
-					"branch":         vcsRepoBranch,
+					"identifier":     c.cfg.VCSRepo,
+					"branch":         c.cfg.VCSBranch,
 					"oauth-token-id": c.cfg.OAuthTokenID,
 				},
-				"policies-path":       testID,
+				// Policy files live under tests/<testID>/ in this repo.
+				"policies-path":       "tests/" + testID,
 				"evaluation-stages":   []string{"at_plan", "at_apply"},
 				"policy-tool-version": "latest",
 			},

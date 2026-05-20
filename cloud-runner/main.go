@@ -40,6 +40,9 @@ Flags:
   --no-cleanup    Keep workspaces and policy sets after run (default: cleanup)
   --timeout       Per-run timeout in minutes (default: 20)
   --purge         Delete all regtest workspaces and policy sets then exit
+  --vcs-repo      GitHub repo (owner/name) for VCS-backed policy sets (env: VCS_REPO)
+                  default: Nagateja2402/testing-automation-tfpolicy
+  --vcs-branch    Branch to ingest policies from (env: VCS_BRANCH, default: main)
 
   Local mode only:
   --tfpolicy-bin  Path to tfpcli binary (env: TFPOLICY_BIN, default: tfpcli)
@@ -81,6 +84,8 @@ func main() {
 	fs.StringVar(&cfg.Host, "host", config.DefaultHost, "TFE host")
 	fs.StringVar(&cfg.Project, "project", config.DefaultProject, "TFE project name")
 	fs.StringVar(&cfg.OAuthTokenID, "oauth-token-id", config.DefaultOAuthTokenID, "VCS OAuth token ID for policy sets")
+	fs.StringVar(&cfg.VCSRepo, "vcs-repo", config.DefaultVCSRepo, "VCS repo (owner/name) for policy sets (env: VCS_REPO)")
+	fs.StringVar(&cfg.VCSBranch, "vcs-branch", config.DefaultVCSBranch, "VCS branch to ingest policies from (env: VCS_BRANCH)")
 	fs.StringVar(&cfg.TFVersion, "tf-version", config.DefaultTFVersion, "Terraform version for workspaces")
 	noCleanup := fs.Bool("no-cleanup", false, "Keep workspaces/policy sets after run")
 	purge := fs.Bool("purge", false, "Delete all regtest workspaces and policy sets then exit")

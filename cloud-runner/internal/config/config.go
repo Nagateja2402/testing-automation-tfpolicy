@@ -13,6 +13,11 @@ const (
 	DefaultOrg     = "nagateja-test-org"
 	// DefaultOAuthTokenID is the VCS OAuth token for Nagateja2402 in nagateja-test-org.
 	DefaultOAuthTokenID = "ot-QzmpZ8opf2RUMVAE"
+	// DefaultVCSRepo is the GitHub repo (owner/name) that holds the regression
+	// tests. Using the same repo avoids maintaining a separate policy-only repo.
+	DefaultVCSRepo = "Nagateja2402/testing-automation-tfpolicy"
+	// DefaultVCSBranch is the branch to ingest policies from.
+	DefaultVCSBranch = "main"
 	// DefaultTFVersion is the preferred policy-enabled Terraform version.
 	// If the HCP Terraform instance does not yet carry this build, the client
 	// will fall back to FallbackTFVersion automatically.
@@ -47,6 +52,13 @@ type Config struct {
 
 	// VCS OAuth token ID for VCS-backed policy sets
 	OAuthTokenID string
+
+	// VCSRepo is the GitHub repo (owner/name) used for VCS-backed policy sets.
+	// Defaults to DefaultVCSRepo (this repo).
+	VCSRepo string
+
+	// VCSBranch is the branch to ingest policies from.
+	VCSBranch string
 
 	// Project in the org that workspaces are created under
 	Project string
@@ -132,6 +144,12 @@ func (c *Config) FromEnv() {
 	}
 	if h := os.Getenv("TFE_HOST"); h != "" && c.Host == DefaultHost {
 		c.Host = h
+	}
+	if repo := os.Getenv("VCS_REPO"); repo != "" && c.VCSRepo == DefaultVCSRepo {
+		c.VCSRepo = repo
+	}
+	if branch := os.Getenv("VCS_BRANCH"); branch != "" && c.VCSBranch == DefaultVCSBranch {
+		c.VCSBranch = branch
 	}
 
 	// Local mode binary overrides.
