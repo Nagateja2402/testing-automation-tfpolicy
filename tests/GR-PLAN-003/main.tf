@@ -22,15 +22,14 @@ resource "aws_s3_bucket" "logging_bucket" {
 resource "aws_s3_bucket" "primary" {
   bucket        = "gr-plan-003-primary-bucket-xyz"
   force_destroy = true
-  # Ensure the logging config resource is planned (and in ChangesSync) before
-  # this bucket's policy runs getresources("aws_s3_bucket_logging", ...).
-  depends_on = [aws_s3_bucket_logging.primary]
 }
 
 resource "aws_s3_bucket_logging" "primary" {
   # Use literal bucket name (not resource reference) to break the dependency
   # on aws_s3_bucket.primary, so this resource can be planned first.
   bucket        = "gr-plan-003-primary-bucket-xyz"
-  target_bucket = aws_s3_bucket.logging_bucket.bucket
+  target_bucket = "gr-plan-003-logging-bucket-xyz"
   target_prefix = "logs/"
+  # Explicit depends_on ensures both buckets exist before logging is configured.
+  depends_on = [aws_s3_bucket.primary, aws_s3_bucket.logging_bucket]
 }

@@ -60,7 +60,7 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 	res := &TestResult{TestID: tc.ID}
 
 	// ── Level 1: tfpcli test / validate ──────────────────────────────────────
-	res.PolicyTest = r.runPolicyTest(ctx, tc)
+	res.PolicyTest = r.RunPolicyTest(ctx, tc)
 
 	// ── Level 2: tfp plan ────────────────────────────────────────────────────
 	if r.cfg.SkipTFP || !tc.HasMainTF || tc.ExpectPlan == index.ExpectNA {
@@ -90,7 +90,10 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 
 // ── Level 1 ──────────────────────────────────────────────────────────────────
 
-func (r *Runner) runPolicyTest(ctx context.Context, tc testcase.TestCase) PhaseResult {
+// RunPolicyTest runs the tfpcli test / validate step (Level 1) for a test case.
+// It is exported so that cloud mode (runner package) can reuse it to run L1
+// locally while L2/L3 execute on HCP Terraform.
+func (r *Runner) RunPolicyTest(ctx context.Context, tc testcase.TestCase) PhaseResult {
 	expected := tc.ExpectPolicyTest
 	if expected == index.ExpectNA {
 		return PhaseResult{Expected: expected, Status: "SKIP", Note: "N/A"}

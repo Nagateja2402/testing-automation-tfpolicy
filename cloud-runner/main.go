@@ -350,12 +350,18 @@ func runCloud(cfg *config.Config, idx *index.Index, _ bool) {
 	}
 	fmt.Printf("  Project ID : %s\n\n", projectID)
 
-	r := runner.New(client, cfg, projectID)
+	// Results directory for L1 (tfpcli) logs — same layout as local mode.
+	resultsDir := filepath.Join(filepath.Dir(cfg.TestDir), "results")
+	if err := os.MkdirAll(resultsDir, 0o755); err != nil {
+		fatal("creating results dir: %v", err)
+	}
+
+	r := runner.New(client, cfg, projectID, resultsDir)
 	results := runCloudParallel(ctx, r, cases, cfg.Parallel)
 
 	sort.Slice(results, func(i, j int) bool { return results[i].TestID < results[j].TestID })
 
-	printCloudResults(results)
+	printCloudResults(results, cfg.Org)
 	exitCode := printCloudSummary(results)
 	os.Exit(exitCode)
 }
@@ -396,6 +402,7 @@ func printCloudHeader(cfg *config.Config, count int) {
 	fmt.Printf("  Org        : %s\n", cfg.Org)
 	fmt.Printf("  Project    : %s\n", cfg.Project)
 	fmt.Printf("  TF version : %s\n", cfg.TFVersion)
+	fmt.Printf("  tfpcli     : %s  (L1 runs locally)\n", cfg.TFPolicyBin)
 	fmt.Printf("  Cleanup    : %v\n", cfg.Cleanup)
 	fmt.Printf("  Parallel   : %d\n", cfg.Parallel)
 	fmt.Printf("  Timeout    : %dm\n", cfg.RunTimeoutMins)
@@ -403,11 +410,11 @@ func printCloudHeader(cfg *config.Config, count int) {
 	fmt.Println("══════════════════════════════════════════════════════════════════")
 }
 
-func printCloudResults(results []*runner.TestResult) {
+func printCloudResults(results []*runner.TestResult, org string) {
 	fmt.Println()
 	fmt.Println("──────────────────────────────────────────────────────────────────")
-	fmt.Printf("  %-15s  %-8s  %-8s  %-8s  %-8s  %s\n",
-		"TEST ID", "OVERALL", "PLAN_EXP", "PLAN_GOT", "APPL_EXP", "APPL_GOT")
+	fmt.Printf("  %-15s  %-8s  %-8s  %-8s  %-8s  %-8s  %s\n",
+		"TEST ID", "OVERALL", "L1-TEST", "PLAN_EXP", "PLAN_GOT", "APPL_EXP", "APPL_GOT")
 	fmt.Println("──────────────────────────────────────────────────────────────────")
 
 	for _, r := range results {
@@ -416,31 +423,30 @@ func printCloudResults(results []*runner.TestResult) {
 		if overall != runner.StatusPass {
 			marker = "✗"
 		}
-		fmt.Printf("  %s %-13s  %-8s  %-8s  %-8s  %-8s  %-8s\n",
+		fmt.Printf("  %s %-13s  %-8s  %-8s  %-8s  %-8s  %-8s  %-8s\n",
 			marker, r.TestID, overall,
+			r.PolicyTest.Status,
 			r.Plan.Expected, r.Plan.Got,
 			r.Apply.Expected, r.Apply.Got,
 		)
 		if r.FatalErr != nil {
 			fmt.Printf("    ERROR: %v\n", r.FatalErr)
 		}
+		if r.PolicyTest.Status == "FAIL" || r.PolicyTest.Status == "ERROR" {
+			fmt.Printf("    [L1] %s\n", r.PolicyTest.Note)
+		}
 		if r.Plan.Note != "" && !r.Plan.Match {
-			fmt.Printf("    PLAN NOTE: %s\n", r.Plan.Note)
+			fmt.Printf("    [PLAN] %s\n", r.Plan.Note)
 		}
 		if r.Apply.Note != "" && !r.Apply.Match {
-			fmt.Printf("    APPLY NOTE: %s\n", r.Apply.Note)
+			fmt.Printf("    [APPLY] %s\n", r.Apply.Note)
 		}
 		if r.RunID != "" {
-			fmt.Printf("    Run: https://app.staging.terraform.io/app/%s/runs/%s\n", cfg_placeholder_org, r.RunID)
+			fmt.Printf("    Run: https://%s/app/%s/runs/%s\n", "app.staging.terraform.io", org, r.RunID)
 		}
 	}
 	fmt.Println("──────────────────────────────────────────────────────────────────")
 }
-
-// cfg_placeholder_org is replaced at call sites with the actual org value.
-// It exists here only to keep the compiler happy; printCloudResults receives
-// the org through the runner.TestResult URL (already embedded in RunID context).
-const cfg_placeholder_org = "(org)"
 
 func printCloudSummary(results []*runner.TestResult) int {
 	var passed, failed, errored int

@@ -3,6 +3,8 @@
 policy {}
 
 resource_policy "aws_s3_bucket" "must_have_logging_configured" {
+  # Only evaluate primary buckets; skip dedicated logging-target buckets.
+  filter = !core::endswith(attrs.bucket, "-logging-bucket-xyz")
   locals {
     # First hop: find logging config for this bucket
     logging_configs = core::getresources("aws_s3_bucket_logging", {

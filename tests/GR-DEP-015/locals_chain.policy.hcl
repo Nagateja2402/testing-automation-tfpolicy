@@ -3,6 +3,8 @@
 policy {}
 
 resource_policy "aws_s3_bucket" "check_logging_chain" {
+  # Only evaluate primary buckets; skip dedicated logging-target buckets.
+  filter = !core::endswith(attrs.bucket, "-logging-bucket-xyz")
   locals {
     # Step A: fetch related resource
     logging_configs = core::getresources("aws_s3_bucket_logging", {

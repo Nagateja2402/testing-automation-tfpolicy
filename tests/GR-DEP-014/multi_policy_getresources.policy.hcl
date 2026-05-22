@@ -3,6 +3,8 @@
 policy {}
 
 resource_policy "aws_s3_bucket" "check_logging_exists" {
+  # Only evaluate primary buckets; skip dedicated logging-target buckets.
+  filter = !core::endswith(attrs.bucket, "-logging-bucket-xyz")
   locals {
     logging_configs = core::getresources("aws_s3_bucket_logging", {
       bucket = attrs.bucket
@@ -16,6 +18,8 @@ resource_policy "aws_s3_bucket" "check_logging_exists" {
 }
 
 resource_policy "aws_s3_bucket" "check_logging_target_prefix" {
+  # Only evaluate primary buckets; skip dedicated logging-target buckets.
+  filter = !core::endswith(attrs.bucket, "-logging-bucket-xyz")
   locals {
     logging_configs = core::getresources("aws_s3_bucket_logging", {
       bucket = attrs.bucket

@@ -16,12 +16,12 @@ provider "aws" {
 }
 
 resource "aws_cloudwatch_log_group" "flow_log" {
-  name              = "gr-dep-001-flow-logs"
+  name              = "gr-dep-001-flow-logs-v2"
   retention_in_days = 7
 }
 
 resource "aws_iam_role" "flow_log" {
-  name = "gr-dep-001-flow-log-role"
+  name = "gr-dep-001-flow-log-role-v2"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{

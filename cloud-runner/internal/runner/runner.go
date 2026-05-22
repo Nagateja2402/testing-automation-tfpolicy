@@ -1,5 +1,6 @@
 // Package runner orchestrates the full lifecycle for a single regression test case
-// on HCP Terraform: create workspace → policy set → config upload → run → evaluate → cleanup.
+// on HCP Terraform: run tfpcli test locally (L1) → create workspace → policy set →
+// config upload → run (L2 plan + L3 apply) → evaluate → cleanup.
 package runner
 
 import (
@@ -11,15 +12,16 @@ import (
 	"cloud-runner/internal/config"
 	"cloud-runner/internal/hcptf"
 	"cloud-runner/internal/index"
+	"cloud-runner/internal/localrun"
 	"cloud-runner/internal/testcase"
 )
 
 // Status values for a test phase outcome.
 const (
-	StatusPass    = "PASS"
-	StatusFail    = "FAIL"
-	StatusSkip    = "SKIP"
-	StatusError   = "ERROR"
+	StatusPass  = "PASS"
+	StatusFail  = "FAIL"
+	StatusSkip  = "SKIP"
+	StatusError = "ERROR"
 )
 
 // PhaseResult captures the outcome of one evaluation phase (plan or apply).
@@ -32,20 +34,26 @@ type PhaseResult struct {
 
 // TestResult is the full outcome for one test case.
 type TestResult struct {
-	TestID    string
-	Plan      PhaseResult
-	Apply     PhaseResult
-	RunID     string
-	Duration  time.Duration
-	CleanupOK bool
-	FatalErr  error
+	TestID     string
+	PolicyTest localrun.PhaseResult // L1 — tfpcli test, run locally
+	Plan       PhaseResult          // L2 — tfp plan, run on HCP Terraform
+	Apply      PhaseResult          // L3 — tfp apply, run on HCP Terraform
+	RunID      string
+	Duration   time.Duration
+	CleanupOK  bool
+	FatalErr   error
 }
 
-// Overall returns PASS if both phases matched expectations, FAIL otherwise.
+// Overall returns PASS only when every non-skipped phase matched expectations.
 func (r *TestResult) Overall() string {
 	if r.FatalErr != nil {
 		return StatusError
 	}
+	// L1: any FAIL or ERROR from tfpcli test counts as overall failure.
+	if r.PolicyTest.Status == "FAIL" || r.PolicyTest.Status == "ERROR" {
+		return StatusFail
+	}
+	// L2 / L3: both plan and apply must match.
 	if r.Plan.Match && r.Apply.Match {
 		return StatusPass
 	}
@@ -57,14 +65,21 @@ type Runner struct {
 	client    *hcptf.Client
 	cfg       *config.Config
 	projectID string
+	local     *localrun.Runner // used only for L1 (tfpcli test)
 }
 
-// New creates a Runner.
-func New(client *hcptf.Client, cfg *config.Config, projectID string) *Runner {
-	return &Runner{client: client, cfg: cfg, projectID: projectID}
+// New creates a Runner. resultsDir is where per-test log files are written.
+func New(client *hcptf.Client, cfg *config.Config, projectID string, resultsDir string) *Runner {
+	return &Runner{
+		client:    client,
+		cfg:       cfg,
+		projectID: projectID,
+		local:     localrun.New(cfg, resultsDir),
+	}
 }
 
 // Run executes the full lifecycle for a single test case and returns its result.
+// L1 (tfpcli test) always runs locally; L2/L3 run on HCP Terraform.
 func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 	start := time.Now()
 	result := &TestResult{
@@ -73,12 +88,15 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		Apply:  PhaseResult{Expected: tc.ExpectApply, Got: index.ExpectNA, Match: true},
 	}
 
+	// ── Step 1: L1 — run tfpcli test locally ────────────────────────────────
+	result.PolicyTest = r.local.RunPolicyTest(ctx, tc)
+
 	wsName := config.WorkspacePrefix + tc.ID
 	psName := config.PolicySetPrefix + tc.ID
 
 	var wsID, psID string
 
-	// ── Step 1: Create workspace ────────────────────────────────────────────
+	// ── Step 2: Create workspace ─────────────────────────────────────────────
 	var err error
 	wsID, err = r.client.CreateWorkspace(ctx, wsName, r.projectID)
 	if err != nil {
@@ -110,7 +128,7 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		result.CleanupOK = cleanupOK
 	}()
 
-	// ── Step 2: Create VCS-backed policy set ────────────────────────────────
+	// ── Step 3: Create VCS-backed policy set ─────────────────────────────────
 	psID, err = r.client.CreatePolicySet(ctx, psName, tc.ID, wsID)
 	if err != nil {
 		result.FatalErr = fmt.Errorf("create policy set: %w", err)
@@ -123,7 +141,7 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		return result
 	}
 
-	// ── Step 3: Upload Terraform config ─────────────────────────────────────
+	// ── Step 4: Upload Terraform config ──────────────────────────────────────
 	tarball, err := tc.ConfigTarball()
 	if err != nil {
 		result.FatalErr = fmt.Errorf("build config tarball: %w", err)
@@ -136,10 +154,10 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		return result
 	}
 
-	// ── Step 4: Determine whether we need apply ──────────────────────────────
+	// ── Step 5: Determine whether we need apply ───────────────────────────────
 	needsApply := tc.ExpectApply != index.ExpectNA
 
-	// ── Step 5: Trigger run (plan + optional apply) ──────────────────────────
+	// ── Step 6: Trigger run (plan + optional apply) ───────────────────────────
 	runResult, err := r.client.TriggerRun(ctx, wsID, cvID, needsApply)
 	if runResult != nil {
 		result.RunID = runResult.RunID
@@ -153,7 +171,7 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		result.Plan.Note = fmt.Sprintf("run error: %v", runResult.Err)
 	}
 
-	// ── Step 6: Evaluate plan phase ──────────────────────────────────────────
+	// ── Step 7: Evaluate plan phase ───────────────────────────────────────────
 	if tc.ExpectPlan != index.ExpectNA {
 		got := classifyRunOutcome(runResult, false)
 		result.Plan.Got = got
@@ -163,7 +181,7 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		}
 	}
 
-	// ── Step 7: Evaluate apply phase ─────────────────────────────────────────
+	// ── Step 8: Evaluate apply phase ──────────────────────────────────────────
 	if needsApply {
 		got := classifyRunOutcome(runResult, true)
 		result.Apply.Got = got
@@ -173,7 +191,7 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		}
 	}
 
-	// ── Step 8: Destroy resources if apply ran ───────────────────────────────
+	// ── Step 9: Destroy resources if apply ran ────────────────────────────────
 	if needsApply && runResult.FinalStatus == "applied" {
 		destroyCtx := context.Background()
 		if e := r.client.TriggerDestroyRun(destroyCtx, wsID); e != nil {
