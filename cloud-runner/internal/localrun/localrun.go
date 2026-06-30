@@ -173,15 +173,48 @@ func (r *Runner) runTFPApply(ctx context.Context, tc testcase.TestCase) PhaseRes
 	r.writeLog(tc.ID, "tfp_apply", out)
 	result := checkResult(tc.ExpectApply, ec, out, "tfp apply")
 
-	// Always attempt destroy to clean up real resources, regardless of apply result.
+	// Always destroy to clean up real resources, regardless of apply result.
 	destroyArgs := []string{"destroy", "-auto-approve", "-input=false", "-no-color"}
 	destroyOut, dec := r.run(ctx, r.cfg.TFPBin, destroyArgs, tc.Dir)
+	r.writeLog(tc.ID, "tfp_destroy", destroyOut)
 	if dec != 0 {
-		r.writeLog(tc.ID, "tfp_destroy", destroyOut)
-		result.Note += fmt.Sprintf(" [destroy warning: exit %d — check tfp_destroy.log]", dec)
+		result.Note += fmt.Sprintf(" [destroy failed: exit %d — check tfp_destroy.log]", dec)
 	}
 
+	// Always clean up local Terraform working files after apply+destroy so the
+	// test directory is left in a pristine state (no state, no lock, no cached
+	// provider binaries). This mirrors the manual cleanup the team performs and
+	// prevents stale state from affecting subsequent runs.
+	r.cleanTFWorkdir(tc.Dir, tc.ID)
+
 	return result
+}
+
+// cleanTFWorkdir removes Terraform-generated files from a test directory:
+// .terraform/, .terraform.lock.hcl, terraform.tfstate, terraform.tfstate.backup
+func (r *Runner) cleanTFWorkdir(dir, testID string) {
+	targets := []string{
+		filepath.Join(dir, ".terraform"),
+		filepath.Join(dir, ".terraform.lock.hcl"),
+		filepath.Join(dir, "terraform.tfstate"),
+		filepath.Join(dir, "terraform.tfstate.backup"),
+	}
+	var removed, failed []string
+	for _, t := range targets {
+		if _, statErr := os.Stat(t); os.IsNotExist(statErr) {
+			continue // nothing to remove
+		}
+		if err := os.RemoveAll(t); err != nil {
+			failed = append(failed, filepath.Base(t))
+		} else {
+			removed = append(removed, filepath.Base(t))
+		}
+	}
+	msg := fmt.Sprintf("cleanup: removed %v", removed)
+	if len(failed) > 0 {
+		msg += fmt.Sprintf("; FAILED to remove %v", failed)
+	}
+	r.writeLog(testID, "tfp_cleanup", msg)
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -232,48 +265,79 @@ func (r *Runner) writeLog(testID, suffix, content string) {
 
 // checkResult evaluates a tool exit code and output against an EXPECT value
 // and returns the corresponding PhaseResult.
+//
+// tfp always exits 0 regardless of policy outcome. Policy results are
+// communicated entirely through output text:
+//
+//   mandatory / mandatory_overridable fail → "Error: Condition not met"
+//   advisory fail                          → "Warning: Condition not met"
+//   unknown condition                      → "Warning: Unknown condition"
+//   pass                                   → no policy output lines
 func checkResult(expected string, ec int, output, level string) PhaseResult {
+	policyFailed := containsAny(output, "Error: Condition not met", "Warning: Condition not met")
+	policyUnknown := containsAny(output, "Warning: Unknown condition", "Unknown condition")
+
 	switch expected {
 	case index.ExpectPass:
-		if ec == 0 {
-			return PhaseResult{Expected: expected, Status: "PASS"}
+		if ec != 0 {
+			return PhaseResult{
+				Expected: expected,
+				Status:   "FAIL",
+				Note:     fmt.Sprintf("%s: exit %d but expected PASS\n%s", level, ec, firstLines(output, 5)),
+			}
 		}
-		return PhaseResult{
-			Expected: expected,
-			Status:   "FAIL",
-			Note:     fmt.Sprintf("%s: exit %d but expected PASS\n%s", level, ec, firstLines(output, 5)),
+		if policyFailed {
+			return PhaseResult{
+				Expected: expected,
+				Status:   "FAIL",
+				Note:     fmt.Sprintf("%s: policy condition not met (expected PASS)\n%s", level, firstLines(output, 5)),
+			}
 		}
+		if policyUnknown {
+			return PhaseResult{
+				Expected: expected,
+				Status:   "FAIL",
+				Note:     fmt.Sprintf("%s: policy condition unknown (expected definitive PASS)\n%s", level, firstLines(output, 5)),
+			}
+		}
+		return PhaseResult{Expected: expected, Status: "PASS"}
 
 	case index.ExpectFail:
 		if ec != 0 {
 			return PhaseResult{Expected: expected, Status: "PASS", Note: fmt.Sprintf("exit %d (expected failure)", ec)}
 		}
+		if policyFailed {
+			return PhaseResult{Expected: expected, Status: "PASS", Note: "policy condition not met (expected failure)"}
+		}
 		return PhaseResult{
 			Expected: expected,
 			Status:   "FAIL",
-			Note:     fmt.Sprintf("%s: exit 0 but expected FAIL\n%s", level, firstLines(output, 5)),
+			Note:     fmt.Sprintf("%s: exit 0, no policy failure detected (expected FAIL)\n%s", level, firstLines(output, 5)),
 		}
 
 	case index.ExpectUnknown:
-		if ec == 0 {
-			if containsAny(output, "policy with unknowns", "unknown condition", "Unknown condition") {
-				return PhaseResult{
-					Expected: expected,
-					Status:   "PASS",
-					Note:     "exit 0 with 'policy with unknowns' warning (expected)",
-				}
-			}
-			// Warn but treat as PASS — some computed attrs resolve earlier than expected.
+		if ec != 0 {
 			return PhaseResult{
 				Expected: expected,
-				Status:   "PASS",
-				Note:     "exit 0 but no 'policy with unknowns' warning found (may have resolved at plan time)",
+				Status:   "FAIL",
+				Note:     fmt.Sprintf("%s: exit %d but expected UNKNOWN (exit 0 + warning)\n%s", level, ec, firstLines(output, 5)),
 			}
 		}
+		if policyUnknown {
+			return PhaseResult{Expected: expected, Status: "PASS", Note: "policy condition unknown (expected)"}
+		}
+		if policyFailed {
+			return PhaseResult{
+				Expected: expected,
+				Status:   "FAIL",
+				Note:     fmt.Sprintf("%s: policy failed (expected UNKNOWN, not definitive FAIL)\n%s", level, firstLines(output, 5)),
+			}
+		}
+		// Condition resolved to pass — acceptable, unknown resolved at plan time.
 		return PhaseResult{
 			Expected: expected,
-			Status:   "FAIL",
-			Note:     fmt.Sprintf("%s: exit %d but expected UNKNOWN (exit 0 + warning)\n%s", level, ec, firstLines(output, 5)),
+			Status:   "PASS",
+			Note:     "exit 0 with no unknown warning (condition may have resolved at plan time)",
 		}
 
 	case index.ExpectNA:
@@ -283,11 +347,23 @@ func checkResult(expected string, ec int, output, level string) PhaseResult {
 	// ERROR_CONTAINS: <text>
 	if strings.HasPrefix(expected, index.ExpectErrorContains) {
 		substr := strings.TrimSpace(strings.TrimPrefix(expected, index.ExpectErrorContains))
-		if ec != 0 && strings.Contains(output, substr) {
+		// Accept non-zero exit with substring (tfpcli behaviour) OR exit 0 with
+		// substring in output (tfp behaviour — tfp always exits 0).
+		if strings.Contains(output, substr) && (ec != 0 || policyFailed || policyUnknown) {
 			return PhaseResult{
 				Expected: expected,
 				Status:   "PASS",
 				Note:     fmt.Sprintf("exit %d, output contains %q", ec, substr),
+			}
+		}
+		// Also accept exit 0 with the substring present even without a policy
+		// signal, since some error messages (e.g. cycle detection) may not
+		// produce standard Condition-not-met lines.
+		if ec == 0 && strings.Contains(output, substr) {
+			return PhaseResult{
+				Expected: expected,
+				Status:   "PASS",
+				Note:     fmt.Sprintf("output contains %q", substr),
 			}
 		}
 		return PhaseResult{

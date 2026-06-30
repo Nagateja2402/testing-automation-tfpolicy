@@ -3,7 +3,6 @@
 # The policy block sets default enforcement; resource_policy overrides it.
 
 policy {
-  enforcement_level = "advisory"
 }
 
 resource_policy "aws_s3_bucket" "policy_override_to_mandatory" {

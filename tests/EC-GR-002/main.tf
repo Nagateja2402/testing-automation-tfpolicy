@@ -1,6 +1,7 @@
-# GR-PLAN-004: vpc_id resolves at plan → flow_log found → PASS at plan and apply
-# Plan: vpc_id resolved, flow_log found → PASS
-# Apply: vpc_id resolved, flow_log found → PASS
+# EC-GR-002: getresources indexed beyond bounds — core::try prevents panic.
+# Policy: checks if flow_logs[5].traffic_type == "ALL" (out of bounds → "NONE" via try → FAIL).
+# At plan time: attrs.id is unknown → UNKNOWN
+# At apply time: getresources returns 1 flow log; index 5 out of bounds → try returns "NONE" → FAIL
 
 terraform {
   required_providers {
@@ -16,13 +17,13 @@ provider "aws" {
 }
 
 resource "aws_cloudwatch_log_group" "flow_log" {
-  name              = "gr-plan-004-flow-logs"
+  name              = "ec-gr-002-flow-logs"
   retention_in_days = 7
 }
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
-  tags = { Name = "gr-plan-004-vpc" }
+  tags = { Name = "ec-gr-002-vpc" }
 }
 
 resource "aws_flow_log" "main" {

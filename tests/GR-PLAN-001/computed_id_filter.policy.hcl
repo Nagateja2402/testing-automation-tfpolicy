@@ -13,5 +13,6 @@ resource_policy "aws_s3_bucket" "must_have_logging_by_id" {
   enforce {
     condition     = core::length(local.logging_configs) > 0
     error_message = "S3 bucket must have access logging configured (filtering by computed id)"
+    info_message = "${core::valuetostring(local.logging_configs)}"
   }
 }

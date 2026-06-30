@@ -472,6 +472,9 @@ type RunResult struct {
 	// ApplyLog is the raw apply log text (truncated to 500 lines).
 	ApplyLog string
 
+	// PolicyLog is the concatenated output from all policy checks for the run.
+	PolicyLog string
+
 	// Err is set when an unexpected error occurred (not a policy denial).
 	Err error
 }
@@ -509,6 +512,9 @@ func (c *Client) TriggerRun(ctx context.Context, wsID, cvID string, applyIfAllow
 		result.PlanLog = planLog
 		result.PolicyPassed, result.PolicyHasUnknowns = analyzeLog(planLog)
 	}
+
+	// Fetch policy check logs (one per policy set attached to the run).
+	result.PolicyLog = c.fetchPolicyCheckLogs(ctx, run.ID)
 
 	// If plan ended with a hard policy failure (errored with DenyResult), stop here.
 	if planStatus == string(tfe.RunErrored) && !result.PolicyPassed {
@@ -687,6 +693,79 @@ func (c *Client) fetchApplyLog(ctx context.Context, applyID string) (string, err
 		return "", nil
 	}
 	return fetchLogURL(ctx, apply.LogReadURL)
+}
+
+func (c *Client) fetchPolicyCheckLogs(ctx context.Context, runID string) string {
+	type tfPolicyEval struct {
+		ID         string `json:"id"`
+		Attributes struct {
+			Status      string `json:"status"`
+			StageType   string `json:"stage-type"`
+			ResultCount struct {
+				Passed          int `json:"passed"`
+				AdvisoryFailed  int `json:"advisory-failed"`
+				MandatoryFailed int `json:"mandatory-failed"`
+				Errored         int `json:"errored"`
+				Unknown         int `json:"unknown"`
+			} `json:"result-count"`
+		} `json:"attributes"`
+	}
+	type tfPolicyEvalList struct {
+		Data []tfPolicyEval `json:"data"`
+	}
+
+	doGetRaw := func(url string) ([]byte, error) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Authorization", "Bearer "+c.cfg.Token)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		body, err := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
+		if err != nil {
+			return nil, err
+		}
+		if resp.StatusCode >= 300 {
+			return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
+		}
+		return body, nil
+	}
+
+	evalsRaw, err := doGetRaw(fmt.Sprintf("https://%s/api/v2/runs/%s/tf-policy-evaluations", c.cfg.Host, runID))
+	if err != nil {
+		return ""
+	}
+	var evalList tfPolicyEvalList
+	if err := json.Unmarshal(evalsRaw, &evalList); err != nil || len(evalList.Data) == 0 {
+		return ""
+	}
+
+	var sb strings.Builder
+	for _, eval := range evalList.Data {
+		if sb.Len() > 0 {
+			sb.WriteString("\n")
+		}
+		rc := eval.Attributes.ResultCount
+		fmt.Fprintf(&sb, "── %s stage (%s): passed=%d advisory_failed=%d mandatory_failed=%d errored=%d unknown=%d\n",
+			eval.Attributes.StageType, eval.Attributes.Status,
+			rc.Passed, rc.AdvisoryFailed, rc.MandatoryFailed, rc.Errored, rc.Unknown)
+
+		outcomesRaw, err := doGetRaw(fmt.Sprintf("https://%s/api/v2/tf-policy-evaluations/%s/tf-policy-set-outcomes", c.cfg.Host, eval.ID))
+		if err != nil {
+			continue
+		}
+		var prettyBuf bytes.Buffer
+		if err := json.Indent(&prettyBuf, outcomesRaw, "  ", "  "); err == nil {
+			sb.WriteString("  ")
+			sb.Write(prettyBuf.Bytes())
+			sb.WriteByte('\n')
+		}
+	}
+	return sb.String()
 }
 
 func fetchLogURL(ctx context.Context, url string) (string, error) {

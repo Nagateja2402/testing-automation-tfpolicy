@@ -248,15 +248,16 @@ func printLocalHeader(cfg *config.Config, count int) {
 }
 
 func printLocalResults(results []*localrun.TestResult, resultsDir string) int {
-	const w = "%-20s"
 	var passed, failed int
 	var failures []string
 
 	fmt.Println()
 	fmt.Println("──────────────────────────────────────────────────────────────────")
-	fmt.Printf("  %-15s  %-8s  %-8s  %-8s  %-8s\n", "TEST ID", "OVERALL", "L1-TEST", "L2-PLAN", "L3-APPLY")
+	fmt.Printf("  %-15s  %-8s  %-8s  %-14s  %-14s\n",
+		"TEST ID", "OVERALL", "L1-TEST", "L2-PLAN", "L3-APPLY")
+	fmt.Printf("  %-15s  %-8s  %-8s  %-6s %-7s  %-6s %-7s\n",
+		"", "", "", "EXP", "GOT", "EXP", "GOT")
 	fmt.Println("──────────────────────────────────────────────────────────────────")
-	_ = w
 
 	for _, r := range results {
 		overall := r.Overall()
@@ -264,9 +265,21 @@ func printLocalResults(results []*localrun.TestResult, resultsDir string) int {
 		if overall != "PASS" {
 			marker = "✗"
 		}
-		fmt.Printf("  %s %-13s  %-8s  %-8s  %-8s  %-8s\n",
+
+		planExp := r.Plan.Expected
+		applyExp := r.Apply.Expected
+		if planExp == "" {
+			planExp = "N/A"
+		}
+		if applyExp == "" {
+			applyExp = "N/A"
+		}
+
+		fmt.Printf("  %s %-13s  %-8s  %-8s  %-6s %-7s  %-6s %-7s\n",
 			marker, r.TestID, overall,
-			r.PolicyTest.Status, r.Plan.Status, r.Apply.Status)
+			r.PolicyTest.Status,
+			planExp, r.Plan.Status,
+			applyExp, r.Apply.Status)
 
 		// Print failure notes.
 		for label, p := range map[string]localrun.PhaseResult{

@@ -21,7 +21,7 @@ const (
 	// DefaultTFVersion is the preferred policy-enabled Terraform version.
 	// If the HCP Terraform instance does not yet carry this build, the client
 	// will fall back to FallbackTFVersion automatically.
-	DefaultTFVersion      = "1.15.0-policy20261105"
+	DefaultTFVersion      = "1.16.0-alpha20260626"
 	FallbackTFVersion     = "1.15.0-policy20261002"
 	DefaultParallel       = 5
 	DefaultRunTimeoutMins = 20

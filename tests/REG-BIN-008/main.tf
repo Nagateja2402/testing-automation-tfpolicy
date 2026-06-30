@@ -1,6 +1,6 @@
-# GR-PLAN-004: vpc_id resolves at plan → flow_log found → PASS at plan and apply
-# Plan: vpc_id resolved, flow_log found → PASS
-# Apply: vpc_id resolved, flow_log found → PASS
+# REG-BIN-008: Topological order deterministic — VPC + flow log.
+# At plan: attrs.id unknown → UNKNOWN (vpc policy)
+# At apply: VPC has flow log with ALL traffic → PASS (both vpc and flow_log policies)
 
 terraform {
   required_providers {
@@ -16,13 +16,13 @@ provider "aws" {
 }
 
 resource "aws_cloudwatch_log_group" "flow_log" {
-  name              = "gr-plan-004-flow-logs"
+  name              = "reg-bin-008-flow-logs"
   retention_in_days = 7
 }
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
-  tags = { Name = "gr-plan-004-vpc" }
+  tags = { Name = "reg-bin-008-vpc" }
 }
 
 resource "aws_flow_log" "main" {

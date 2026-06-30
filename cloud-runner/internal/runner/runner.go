@@ -6,6 +6,8 @@ package runner
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -62,20 +64,32 @@ func (r *TestResult) Overall() string {
 
 // Runner manages state for executing test cases.
 type Runner struct {
-	client    *hcptf.Client
-	cfg       *config.Config
-	projectID string
-	local     *localrun.Runner // used only for L1 (tfpcli test)
+	client     *hcptf.Client
+	cfg        *config.Config
+	projectID  string
+	resultsDir string
+	local      *localrun.Runner // used only for L1 (tfpcli test)
 }
 
 // New creates a Runner. resultsDir is where per-test log files are written.
 func New(client *hcptf.Client, cfg *config.Config, projectID string, resultsDir string) *Runner {
 	return &Runner{
-		client:    client,
-		cfg:       cfg,
-		projectID: projectID,
-		local:     localrun.New(cfg, resultsDir),
+		client:     client,
+		cfg:        cfg,
+		projectID:  projectID,
+		resultsDir: resultsDir,
+		local:      localrun.New(cfg, resultsDir),
 	}
+}
+
+// writeLog writes content to <resultsDir>/<testID>.<suffix>.log.
+// It is a no-op when content is empty or resultsDir is unset.
+func (r *Runner) writeLog(testID, suffix, content string) {
+	if content == "" || r.resultsDir == "" {
+		return
+	}
+	path := filepath.Join(r.resultsDir, testID+"."+suffix+".log")
+	_ = os.WriteFile(path, []byte(content), 0o644)
 }
 
 // Run executes the full lifecycle for a single test case and returns its result.
@@ -171,6 +185,11 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		result.Plan.Note = fmt.Sprintf("run error: %v", runResult.Err)
 	}
 
+	// Write cloud logs to results dir alongside L1 logs.
+	r.writeLog(tc.ID, "cloud_plan", runResult.PlanLog)
+	r.writeLog(tc.ID, "cloud_apply", runResult.ApplyLog)
+	r.writeLog(tc.ID, "cloud_policy", runResult.PolicyLog)
+
 	// ── Step 7: Evaluate plan phase ───────────────────────────────────────────
 	if tc.ExpectPlan != index.ExpectNA {
 		got := classifyRunOutcome(runResult, false)
@@ -191,8 +210,8 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		}
 	}
 
-	// ── Step 9: Destroy resources if apply ran ────────────────────────────────
-	if needsApply && runResult.FinalStatus == "applied" {
+	// ── Step 9: Destroy resources if apply ran or partially applied ──────────
+	if needsApply && (runResult.FinalStatus == "applied" || runResult.FinalStatus == "errored") {
 		destroyCtx := context.Background()
 		if e := r.client.TriggerDestroyRun(destroyCtx, wsID); e != nil {
 			result.Apply.Note += fmt.Sprintf(" [destroy warning: %v]", e)
@@ -231,11 +250,20 @@ func classifyRunOutcome(r *hcptf.RunResult, applyPhase bool) string {
 		// We treat it as FAIL from a policy perspective.
 		return index.ExpectFail
 
-	case "planned", "planned_and_finished", "policy_checked", "policy_soft_failed":
-		// Plan completed; no hard-mandatory block.
+	case "planned", "planned_and_finished", "policy_checked":
 		_, unknowns := analyzeLogForPhase(r.PlanLog)
 		if unknowns {
 			return index.ExpectUnknown
+		}
+		return index.ExpectPass
+
+	case "policy_soft_failed":
+		_, unknowns := analyzeLogForPhase(r.PlanLog)
+		if unknowns {
+			return index.ExpectUnknown
+		}
+		if policyLogHasAdvisoryFailed(r.PolicyLog) {
+			return index.ExpectFail
 		}
 		return index.ExpectPass
 
@@ -278,6 +306,11 @@ func expectationMet(expected, got, log string) bool {
 		}
 	}
 	return false
+}
+
+func policyLogHasAdvisoryFailed(policyLog string) bool {
+	return strings.Contains(policyLog, "advisory_failed=") &&
+		!strings.Contains(policyLog, "advisory_failed=0")
 }
 
 func truncate(s string, lines int) string {

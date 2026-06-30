@@ -1,6 +1,6 @@
-# GR-PLAN-004: vpc_id resolves at plan → flow_log found → PASS at plan and apply
-# Plan: vpc_id resolved, flow_log found → PASS
-# Apply: vpc_id resolved, flow_log found → PASS
+# EC-GR-001: getresources inside filter expression — filter uses attrs.id (computed).
+# At plan time: attrs.id is unknown → getresources returns unknown → UNKNOWN
+# At apply time: VPC has a flow log with env tag present → filter true → enforce passes → PASS
 
 terraform {
   required_providers {
@@ -16,13 +16,16 @@ provider "aws" {
 }
 
 resource "aws_cloudwatch_log_group" "flow_log" {
-  name              = "gr-plan-004-flow-logs"
+  name              = "ec-gr-001-flow-logs"
   retention_in_days = 7
 }
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
-  tags = { Name = "gr-plan-004-vpc" }
+  tags = {
+    Name        = "ec-gr-001-vpc"
+    Environment = "dev"
+  }
 }
 
 resource "aws_flow_log" "main" {
