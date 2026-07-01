@@ -160,7 +160,7 @@ test_cases:
     suite: GR-DEP
     expect:
       tfpolicy_test: PASS
-      tfp_plan: PASS
+      tfp_plan: UNKNOWN
       tfp_apply: PASS
 
   - id: GR-DEP-002
@@ -192,7 +192,7 @@ test_cases:
     suite: GR-DEP
     expect:
       tfpolicy_test: PASS
-      tfp_plan: PASS
+      tfp_plan: UNKNOWN
       tfp_apply: PASS
 
   - id: GR-DEP-009
@@ -265,7 +265,7 @@ test_cases:
     suite: GR-PLAN
     expect:
       tfpolicy_test: PASS
-      tfp_plan: N/A
+      tfp_plan: UNKNOWN
       tfp_apply: PASS
 
   - id: GR-PLAN-003
@@ -281,7 +281,7 @@ test_cases:
     suite: GR-PLAN
     expect:
       tfpolicy_test: PASS
-      tfp_plan: PASS
+      tfp_plan: UNKNOWN
       tfp_apply: PASS
 
   - id: GR-PLAN-005

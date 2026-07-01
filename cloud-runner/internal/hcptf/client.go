@@ -102,6 +102,16 @@ func (c *Client) DeleteWorkspace(ctx context.Context, wsID string) error {
 	return c.tfe.Workspaces.DeleteByID(ctx, wsID)
 }
 
+// FindWorkspaceByName returns the ID of the first workspace matching the given
+// name in the configured org. Returns ("", nil) when no match is found.
+func (c *Client) FindWorkspaceByName(ctx context.Context, name string) (string, error) {
+	ws, err := c.tfe.Workspaces.Read(ctx, c.cfg.Org, name)
+	if err != nil {
+		return "", err
+	}
+	return ws.ID, nil
+}
+
 // ---------------------------------------------------------------------------
 // Policy Set (VCS-backed)
 // ---------------------------------------------------------------------------
@@ -457,8 +467,13 @@ type RunResult struct {
 	// RunID is the TFE run ID.
 	RunID string
 
-	// FinalStatus is the terminal run status (e.g. "planned", "applied", "errored").
+	// FinalStatus is the terminal run status after apply (e.g. "applied", "errored").
+	// When apply was not attempted, this equals PlanStatus.
 	FinalStatus string
+
+	// PlanStatus is the plan-terminal status captured before apply confirmation.
+	// Use this to evaluate the plan phase; FinalStatus may be overwritten by apply.
+	PlanStatus string
 
 	// PolicyPassed is true when no hard-mandatory policy blocked the phase.
 	PolicyPassed bool
@@ -502,9 +517,11 @@ func (c *Client) TriggerRun(ctx context.Context, wsID, cvID string, applyIfAllow
 	if err != nil {
 		result.Err = err
 		result.FinalStatus = planStatus
+		result.PlanStatus = planStatus
 		return result, nil
 	}
 	result.FinalStatus = planStatus
+	result.PlanStatus = planStatus
 
 	// Fetch plan log regardless of status.
 	if planID, err := c.planIDForRun(ctx, run.ID); err == nil {

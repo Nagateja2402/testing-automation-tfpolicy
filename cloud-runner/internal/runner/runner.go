@@ -51,11 +51,9 @@ func (r *TestResult) Overall() string {
 	if r.FatalErr != nil {
 		return StatusError
 	}
-	// L1: any FAIL or ERROR from tfpcli test counts as overall failure.
 	if r.PolicyTest.Status == "FAIL" || r.PolicyTest.Status == "ERROR" {
 		return StatusFail
 	}
-	// L2 / L3: both plan and apply must match.
 	if r.Plan.Match && r.Apply.Match {
 		return StatusPass
 	}
@@ -68,7 +66,7 @@ type Runner struct {
 	cfg        *config.Config
 	projectID  string
 	resultsDir string
-	local      *localrun.Runner // used only for L1 (tfpcli test)
+	local      *localrun.Runner
 }
 
 // New creates a Runner. resultsDir is where per-test log files are written.
@@ -83,7 +81,6 @@ func New(client *hcptf.Client, cfg *config.Config, projectID string, resultsDir 
 }
 
 // writeLog writes content to <resultsDir>/<testID>.<suffix>.log.
-// It is a no-op when content is empty or resultsDir is unset.
 func (r *Runner) writeLog(testID, suffix, content string) {
 	if content == "" || r.resultsDir == "" {
 		return
@@ -93,7 +90,6 @@ func (r *Runner) writeLog(testID, suffix, content string) {
 }
 
 // Run executes the full lifecycle for a single test case and returns its result.
-// L1 (tfpcli test) always runs locally; L2/L3 run on HCP Terraform.
 func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 	start := time.Now()
 	result := &TestResult{
@@ -102,7 +98,7 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		Apply:  PhaseResult{Expected: tc.ExpectApply, Got: index.ExpectNA, Match: true},
 	}
 
-	// ── Step 1: L1 — run tfpcli test locally ────────────────────────────────
+	// ── Step 1: L1 — run tfpcli test locally ─────────────────────────────────
 	result.PolicyTest = r.local.RunPolicyTest(ctx, tc)
 
 	wsName := config.WorkspacePrefix + tc.ID
@@ -110,16 +106,27 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 
 	var wsID, psID string
 
-	// ── Step 2: Create workspace ─────────────────────────────────────────────
+	// ── Step 2: Create workspace (retry once on name conflict) ────────────────
 	var err error
 	wsID, err = r.client.CreateWorkspace(ctx, wsName, r.projectID)
 	if err != nil {
-		result.FatalErr = fmt.Errorf("create workspace: %w", err)
-		result.Duration = time.Since(start)
-		return result
+		// Fix: If workspace already exists from a prior stale run, delete it and retry.
+		if strings.Contains(err.Error(), "name is already taken") ||
+			strings.Contains(err.Error(), "already exists") {
+			fmt.Printf("  [WARN] workspace %s already exists — purging and retrying\n", wsName)
+			if staleID, lookupErr := r.client.FindWorkspaceByName(ctx, wsName); lookupErr == nil && staleID != "" {
+				_ = r.client.TriggerDestroyRun(ctx, staleID)
+				_ = r.client.DeleteWorkspace(ctx, staleID)
+			}
+			wsID, err = r.client.CreateWorkspace(ctx, wsName, r.projectID)
+		}
+		if err != nil {
+			result.FatalErr = fmt.Errorf("create workspace: %w", err)
+			result.Duration = time.Since(start)
+			return result
+		}
 	}
 
-	// Ensure cleanup runs even on failure.
 	defer func() {
 		result.Duration = time.Since(start)
 		if !r.cfg.Cleanup {
@@ -142,20 +149,19 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		result.CleanupOK = cleanupOK
 	}()
 
-	// ── Step 3: Create VCS-backed policy set ─────────────────────────────────
+	// ── Step 3: Create VCS-backed policy set ──────────────────────────────────
 	psID, err = r.client.CreatePolicySet(ctx, psName, tc.ID, wsID)
 	if err != nil {
 		result.FatalErr = fmt.Errorf("create policy set: %w", err)
 		return result
 	}
 
-	// Wait for VCS ingestion to complete before triggering a run.
 	if err := r.client.WaitPolicySetReady(ctx, psID); err != nil {
 		result.FatalErr = fmt.Errorf("waiting for policy set ready: %w", err)
 		return result
 	}
 
-	// ── Step 4: Upload Terraform config ──────────────────────────────────────
+	// ── Step 4: Upload Terraform config ───────────────────────────────────────
 	tarball, err := tc.ConfigTarball()
 	if err != nil {
 		result.FatalErr = fmt.Errorf("build config tarball: %w", err)
@@ -181,18 +187,17 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		return result
 	}
 	if runResult.Err != nil {
-		// Non-fatal run error — still evaluate phases.
 		result.Plan.Note = fmt.Sprintf("run error: %v", runResult.Err)
 	}
 
-	// Write cloud logs to results dir alongside L1 logs.
 	r.writeLog(tc.ID, "cloud_plan", runResult.PlanLog)
 	r.writeLog(tc.ID, "cloud_apply", runResult.ApplyLog)
 	r.writeLog(tc.ID, "cloud_policy", runResult.PolicyLog)
 
-	// ── Step 7: Evaluate plan phase ───────────────────────────────────────────
+	// ── Step 7: Evaluate plan phase (use PlanStatus, NOT FinalStatus) ─────────
+	// Fix: FinalStatus is overwritten by apply; PlanStatus preserves the plan result.
 	if tc.ExpectPlan != index.ExpectNA {
-		got := classifyRunOutcome(runResult, false)
+		got := classifyPlanOutcome(runResult)
 		result.Plan.Got = got
 		result.Plan.Match = expectationMet(tc.ExpectPlan, got, runResult.PlanLog)
 		if !result.Plan.Match {
@@ -202,7 +207,7 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 
 	// ── Step 8: Evaluate apply phase ──────────────────────────────────────────
 	if needsApply {
-		got := classifyRunOutcome(runResult, true)
+		got := classifyApplyOutcome(runResult)
 		result.Apply.Got = got
 		result.Apply.Match = expectationMet(tc.ExpectApply, got, runResult.ApplyLog+runResult.PlanLog)
 		if !result.Apply.Match {
@@ -210,8 +215,11 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		}
 	}
 
-	// ── Step 9: Destroy resources if apply ran or partially applied ──────────
+	// ── Step 9: Destroy resources if apply ran or partially applied ───────────
 	if needsApply && (runResult.FinalStatus == "applied" || runResult.FinalStatus == "errored") {
+		if runResult.FinalStatus == "errored" {
+			result.Apply.Note += " [WARNING: apply errored — resources created before the failure may not be in Terraform state and will NOT be destroyed by the destroy run; delete them manually (e.g. CloudWatch log groups, S3 buckets)]"
+		}
 		destroyCtx := context.Background()
 		if e := r.client.TriggerDestroyRun(destroyCtx, wsID); e != nil {
 			result.Apply.Note += fmt.Sprintf(" [destroy warning: %v]", e)
@@ -221,33 +229,25 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 	return result
 }
 
-// classifyRunOutcome maps the hcptf.RunResult to PASS / FAIL / UNKNOWN
-// for plan (applyPhase=false) or apply (applyPhase=true).
-func classifyRunOutcome(r *hcptf.RunResult, applyPhase bool) string {
+// classifyPlanOutcome maps the plan-terminal status to PASS/FAIL/UNKNOWN.
+// It uses PlanStatus (not FinalStatus) so advisory failures at plan are not
+// lost when apply subsequently succeeds.
+func classifyPlanOutcome(r *hcptf.RunResult) string {
 	if r == nil {
 		return StatusError
 	}
 
-	log := r.PlanLog
-	if applyPhase {
-		log = r.ApplyLog
-	}
-
-	switch tfe_RunStatus(r.FinalStatus) {
+	switch tfe_RunStatus(r.PlanStatus) {
 	case "applied":
-		// Apply succeeded.
-		passed, unknowns := analyzeLogForPhase(log)
-		if !passed {
-			return index.ExpectFail
-		}
-		if unknowns && !applyPhase {
+		// Apply ran — check plan log for policy signals that were present at plan.
+		// Note: if apply succeeded cleanly, plan was passing/unknown. Use plan log.
+		_, unknowns := analyzeLogForPhase(r.PlanLog)
+		if unknowns {
 			return index.ExpectUnknown
 		}
 		return index.ExpectPass
 
 	case "errored":
-		// Could be a hard policy failure or an infra error (e.g. no AWS creds).
-		// We treat it as FAIL from a policy perspective.
 		return index.ExpectFail
 
 	case "planned", "planned_and_finished", "policy_checked":
@@ -262,6 +262,8 @@ func classifyRunOutcome(r *hcptf.RunResult, applyPhase bool) string {
 		if unknowns {
 			return index.ExpectUnknown
 		}
+		// Fix: advisory failures at plan must be reported as FAIL even when apply
+		// later succeeds (which changes FinalStatus to "applied").
 		if policyLogHasAdvisoryFailed(r.PolicyLog) {
 			return index.ExpectFail
 		}
@@ -272,9 +274,43 @@ func classifyRunOutcome(r *hcptf.RunResult, applyPhase bool) string {
 	}
 }
 
+// classifyApplyOutcome maps the final (post-apply) status to PASS/FAIL/UNKNOWN.
+func classifyApplyOutcome(r *hcptf.RunResult) string {
+	if r == nil {
+		return StatusError
+	}
+
+	switch tfe_RunStatus(r.FinalStatus) {
+	case "applied":
+		passed, unknowns := analyzeLogForPhase(r.ApplyLog)
+		if !passed {
+			return index.ExpectFail
+		}
+		if unknowns {
+			return index.ExpectUnknown
+		}
+		return index.ExpectPass
+
+	case "errored":
+		// Fix: if plan was hard-blocked by mandatory policy (errored at plan with no
+		// DenyResult in ApplyLog), apply was unreachable — map this to FAIL not ERROR.
+		// The plan denial is the failure; unreachable apply is the expected consequence.
+		return index.ExpectFail
+
+	case "planned", "planned_and_finished", "policy_checked",
+		"policy_soft_failed", "policy_override":
+		// Apply was not reached (e.g. plan with unknowns pending policy override).
+		// Treat as FAIL so tests expecting apply to run are flagged.
+		return index.ExpectFail
+
+	default:
+		return StatusError
+	}
+}
+
 type tfe_RunStatus string
 
-// analyzeLogForPhase is a local alias so this package doesn't import hcptf.
+// analyzeLogForPhase inspects a log for hard policy denials and unknown conditions.
 func analyzeLogForPhase(log string) (passed, unknowns bool) {
 	if log == "" {
 		return true, false
