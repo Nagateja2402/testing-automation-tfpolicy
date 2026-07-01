@@ -555,6 +555,11 @@ func (c *Client) TriggerRun(ctx context.Context, wsID, cvID string, applyIfAllow
 			return result, nil
 		}
 
+		// Re-fetch policy outcomes now that apply is terminal: the at_apply
+		// evaluation only reaches a verdict after apply runs, so the copy taken
+		// right after plan still shows the Apply stage as pending/all-zero.
+		result.PolicyLog = c.fetchPolicyCheckLogs(ctx, run.ID)
+
 		// Fetch apply log.
 		if applyID, err := c.applyIDForRun(ctx, run.ID); err == nil {
 			applyLog, _ := c.fetchApplyLog(ctx, applyID)

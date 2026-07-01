@@ -9,3 +9,7 @@ results/
 
 #opencode files
 .opencode
+
+# Build files
+cloudrunner
+./cloud-runner/cloudrunner

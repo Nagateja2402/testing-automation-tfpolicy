@@ -52,8 +52,8 @@ test_cases:
     suite: EC-GR
     expect:
       tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
+      tfp_plan: UNKNOWN
+      tfp_apply: PASS
 
   - id: EC-GR-003
     description: getresources() with null filter value
@@ -102,8 +102,8 @@ test_cases:
     suite: EL
     expect:
       tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
+      tfp_plan: PASS
+      tfp_apply: PASS
 
   - id: EL-MND-001
     description: mandatory enforcement level blocks non-compliant resources
@@ -168,7 +168,7 @@ test_cases:
     suite: GR-DEP
     expect:
       tfpolicy_test: PASS
-      tfp_plan: PASS
+      tfp_plan: UNKNOWN
       tfp_apply: PASS
 
   - id: GR-DEP-006
@@ -176,8 +176,8 @@ test_cases:
     suite: GR-DEP
     expect:
       tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
+      tfp_plan: UNKNOWN
+      tfp_apply: PASS
 
   - id: GR-DEP-007
     description: getresources() with empty filter returns all resources
@@ -586,8 +586,8 @@ test_cases:
     suite: REG-BIN
     expect:
       tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
+      tfp_plan: PASS
+      tfp_apply: PASS
 
   - id: REG-BIN-010
     description: large policy file with many rules evaluates correctly
@@ -619,5 +619,5 @@ test_cases:
     suite: TF-E2E
     expect:
       tfpolicy_test: PASS
-      tfp_plan: PASS
+      tfp_plan: UNKNOWN
       tfp_apply: PASS

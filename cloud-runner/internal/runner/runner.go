@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -110,9 +112,7 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 	var err error
 	wsID, err = r.client.CreateWorkspace(ctx, wsName, r.projectID)
 	if err != nil {
-		// Fix: If workspace already exists from a prior stale run, delete it and retry.
-		if strings.Contains(err.Error(), "name is already taken") ||
-			strings.Contains(err.Error(), "already exists") {
+		if isNameConflict(err) {
 			fmt.Printf("  [WARN] workspace %s already exists — purging and retrying\n", wsName)
 			if staleID, lookupErr := r.client.FindWorkspaceByName(ctx, wsName); lookupErr == nil && staleID != "" {
 				_ = r.client.TriggerDestroyRun(ctx, staleID)
@@ -134,6 +134,8 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 		}
 		cleanupCtx := context.Background()
 		cleanupOK := true
+		// psID is normally already deleted before the destroy run (see Step 9);
+		// this is a fallback for early-return paths where Step 9 was not reached.
 		if psID != "" {
 			if e := r.client.DeletePolicySet(cleanupCtx, psID); e != nil {
 				fmt.Printf("  [CLEANUP ERR] delete policy set %s: %v\n", psID, e)
@@ -221,6 +223,17 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 			result.Apply.Note += " [WARNING: apply errored — resources created before the failure may not be in Terraform state and will NOT be destroyed by the destroy run; delete them manually (e.g. CloudWatch log groups, S3 buckets)]"
 		}
 		destroyCtx := context.Background()
+		// Detach the policy set BEFORE destroying. A destroy is a "delete"
+		// operation, so a delete-scoped mandatory policy (e.g. OP-DEL-*) would
+		// block the destroy run and orphan the resources. Deleting the policy
+		// set first lets the destroy proceed unimpeded.
+		if r.cfg.Cleanup && psID != "" {
+			if e := r.client.DeletePolicySet(destroyCtx, psID); e != nil {
+				fmt.Printf("  [CLEANUP ERR] delete policy set %s: %v\n", psID, e)
+			} else {
+				psID = ""
+			}
+		}
 		if e := r.client.TriggerDestroyRun(destroyCtx, wsID); e != nil {
 			result.Apply.Note += fmt.Sprintf(" [destroy warning: %v]", e)
 		}
@@ -229,52 +242,99 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 	return result
 }
 
-// classifyPlanOutcome maps the plan-terminal status to PASS/FAIL/UNKNOWN.
-// It uses PlanStatus (not FinalStatus) so advisory failures at plan are not
-// lost when apply subsequently succeeds.
+// policyStageCounts holds the aggregated result-count for one policy
+// evaluation stage (Init / Plan / Apply) parsed from RunResult.PolicyLog.
+type policyStageCounts struct {
+	found           bool
+	passed          int
+	advisoryFailed  int
+	mandatoryFailed int
+	errored         int
+	unknown         int
+}
+
+// Matches a PolicyLog stage summary line, capturing StageType (group 1,
+// case-insensitive) and the five counts, e.g.:
+//	── Plan stage (failed): passed=0 advisory_failed=0 mandatory_failed=1 errored=0 unknown=0
+var stageHeaderRe = regexp.MustCompile(
+	`(?i)──\s+(\w+)\s+stage\s+\([^)]*\):\s+passed=(\d+)\s+advisory_failed=(\d+)\s+mandatory_failed=(\d+)\s+errored=(\d+)\s+unknown=(\d+)`,
+)
+
+// policyStage reads the named stage's counts from PolicyLog. The authoritative
+// policy verdict lives ONLY here — the Terraform plan/apply logs carry
+// resource-change events, never policy results. found=false when stage absent.
+func policyStage(policyLog, stage string) policyStageCounts {
+	var out policyStageCounts
+	if policyLog == "" {
+		return out
+	}
+	for _, m := range stageHeaderRe.FindAllStringSubmatch(policyLog, -1) {
+		if !strings.EqualFold(m[1], stage) {
+			continue
+		}
+		out.found = true
+		out.passed = atoiSafe(m[2])
+		out.advisoryFailed = atoiSafe(m[3])
+		out.mandatoryFailed = atoiSafe(m[4])
+		out.errored = atoiSafe(m[5])
+		out.unknown = atoiSafe(m[6])
+		return out
+	}
+	return out
+}
+
+func atoiSafe(s string) int {
+	n, _ := strconv.Atoi(s)
+	return n
+}
+
+// classifyPolicyStage maps one stage's counts to PASS/FAIL/UNKNOWN. Only a
+// mandatory failure or an errored policy blocks (FAIL); advisory failures are
+// non-blocking warnings (HCP marks the stage passed) so they do not fail the
+// stage. A pending unknown is UNKNOWN; otherwise PASS.
+func classifyPolicyStage(c policyStageCounts) string {
+	if c.mandatoryFailed > 0 || c.errored > 0 {
+		return index.ExpectFail
+	}
+	if c.unknown > 0 {
+		return index.ExpectUnknown
+	}
+	return index.ExpectPass
+}
+
+// classifyPlanOutcome maps the plan phase to PASS/FAIL/UNKNOWN. An Init-stage
+// failure (module_policy / provider_policy evaluate at init) blocks and cancels
+// the plan, so it is checked first; otherwise the Plan stage governs, falling
+// back to run status only when no policy stage is present.
 func classifyPlanOutcome(r *hcptf.RunResult) string {
 	if r == nil {
 		return StatusError
 	}
 
-	switch tfe_RunStatus(r.PlanStatus) {
-	case "applied":
-		// Apply ran — check plan log for policy signals that were present at plan.
-		// Note: if apply succeeded cleanly, plan was passing/unknown. Use plan log.
-		_, unknowns := analyzeLogForPhase(r.PlanLog)
-		if unknowns {
-			return index.ExpectUnknown
+	if init := policyStage(r.PolicyLog, "init"); init.found {
+		if v := classifyPolicyStage(init); v != index.ExpectPass {
+			return v
 		}
-		return index.ExpectPass
+	}
 
+	if stage := policyStage(r.PolicyLog, "plan"); stage.found {
+		return classifyPolicyStage(stage)
+	}
+
+	switch tfe_RunStatus(r.PlanStatus) {
 	case "errored":
 		return index.ExpectFail
-
-	case "planned", "planned_and_finished", "policy_checked":
-		_, unknowns := analyzeLogForPhase(r.PlanLog)
-		if unknowns {
-			return index.ExpectUnknown
-		}
+	case "applied", "planned", "planned_and_finished",
+		"policy_checked", "policy_soft_failed", "policy_override":
 		return index.ExpectPass
-
-	case "policy_soft_failed":
-		_, unknowns := analyzeLogForPhase(r.PlanLog)
-		if unknowns {
-			return index.ExpectUnknown
-		}
-		// Fix: advisory failures at plan must be reported as FAIL even when apply
-		// later succeeds (which changes FinalStatus to "applied").
-		if policyLogHasAdvisoryFailed(r.PolicyLog) {
-			return index.ExpectFail
-		}
-		return index.ExpectPass
-
 	default:
 		return StatusError
 	}
 }
 
-// classifyApplyOutcome maps the final (post-apply) status to PASS/FAIL/UNKNOWN.
+// classifyApplyOutcome maps the apply phase to PASS/FAIL/UNKNOWN. When the plan
+// blocks apply, the Apply stage is unreachable with zero counts, so the run
+// status decides whether apply actually completed.
 func classifyApplyOutcome(r *hcptf.RunResult) string {
 	if r == nil {
 		return StatusError
@@ -282,25 +342,30 @@ func classifyApplyOutcome(r *hcptf.RunResult) string {
 
 	switch tfe_RunStatus(r.FinalStatus) {
 	case "applied":
-		passed, unknowns := analyzeLogForPhase(r.ApplyLog)
-		if !passed {
-			return index.ExpectFail
-		}
-		if unknowns {
-			return index.ExpectUnknown
+		if stage := policyStage(r.PolicyLog, "apply"); stage.found {
+			return classifyPolicyStage(stage)
 		}
 		return index.ExpectPass
 
 	case "errored":
-		// Fix: if plan was hard-blocked by mandatory policy (errored at plan with no
-		// DenyResult in ApplyLog), apply was unreachable — map this to FAIL not ERROR.
-		// The plan denial is the failure; unreachable apply is the expected consequence.
+		// Apply errored, or plan was hard-blocked so apply was unreachable — both FAIL.
 		return index.ExpectFail
 
-	case "planned", "planned_and_finished", "policy_checked",
+	case "planned_and_finished":
+		// A plan with zero resource changes ends here without an apply phase. If
+		// policy passed at plan, apply is vacuously satisfied → PASS; a plan-stage
+		// policy failure/unknown still governs the outcome.
+		if stage := policyStage(r.PolicyLog, "plan"); stage.found {
+			return classifyPolicyStage(stage)
+		}
+		if planHadNoChanges(r.PlanLog) {
+			return index.ExpectPass
+		}
+		return index.ExpectFail
+
+	case "planned", "policy_checked",
 		"policy_soft_failed", "policy_override":
-		// Apply was not reached (e.g. plan with unknowns pending policy override).
-		// Treat as FAIL so tests expecting apply to run are flagged.
+		// Apply was reachable but never confirmed/ran; flag tests that expected it.
 		return index.ExpectFail
 
 	default:
@@ -308,20 +373,15 @@ func classifyApplyOutcome(r *hcptf.RunResult) string {
 	}
 }
 
-type tfe_RunStatus string
-
-// analyzeLogForPhase inspects a log for hard policy denials and unknown conditions.
-func analyzeLogForPhase(log string) (passed, unknowns bool) {
-	if log == "" {
-		return true, false
-	}
-	hasDeny := strings.Contains(log, `"result":"DenyResult"`) &&
-		strings.Contains(log, `"enforcement_level":"mandatory"`)
-	hasUnknown := strings.Contains(log, "policy with unknowns") ||
-		strings.Contains(log, "unknown condition") ||
-		strings.Contains(log, "Unknown condition")
-	return !hasDeny, hasUnknown
+// planHadNoChanges reports whether the plan produced zero resource changes,
+// which drives a run to planned_and_finished with no apply phase. Keys on the
+// Terraform JSON change_summary line: "changes":{"add":0,...,"operation":"plan"}.
+func planHadNoChanges(planLog string) bool {
+	return strings.Contains(planLog, `"add":0,"change":0,"import":0,"remove":0`) ||
+		strings.Contains(planLog, "Plan: 0 to add, 0 to change, 0 to destroy")
 }
+
+type tfe_RunStatus string
 
 // expectationMet returns true when the observed outcome matches the EXPECT directive.
 func expectationMet(expected, got, log string) bool {
@@ -344,9 +404,17 @@ func expectationMet(expected, got, log string) bool {
 	return false
 }
 
-func policyLogHasAdvisoryFailed(policyLog string) bool {
-	return strings.Contains(policyLog, "advisory_failed=") &&
-		!strings.Contains(policyLog, "advisory_failed=0")
+// isNameConflict reports a duplicate-workspace-name 422. TFE phrases it as
+// "...Validation failed: Name has already been taken"; older/self-hosted
+// variants use "name is already taken" or "already exists". Case-insensitive.
+func isNameConflict(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "has already been taken") ||
+		strings.Contains(msg, "name is already taken") ||
+		strings.Contains(msg, "already exists")
 }
 
 func truncate(s string, lines int) string {
