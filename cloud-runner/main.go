@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -30,6 +31,7 @@ Flags:
   --index         Path to index.yml (default: <parent of test-dir>/index.yml)
   --test-id       Run only this test case ID (default: run all)
   --parallel      Max concurrent test cases (default: 5)
+  --version       Print cloud-runner version and exit
 
   Cloud mode only:
   --token         TFE API token (env: TFE_TOKEN)
@@ -89,6 +91,7 @@ func main() {
 	fs.StringVar(&cfg.TFVersion, "tf-version", config.DefaultTFVersion, "Terraform version for workspaces")
 	noCleanup := fs.Bool("no-cleanup", false, "Keep workspaces/policy sets after run")
 	purge := fs.Bool("purge", false, "Delete all regtest workspaces and policy sets then exit")
+	showVersion := fs.Bool("version", false, "Print cloud-runner version and exit")
 	fs.IntVar(&cfg.RunTimeoutMins, "timeout", config.DefaultRunTimeoutMins, "Per-run timeout (minutes)")
 
 	// Local-only
@@ -99,6 +102,11 @@ func main() {
 	fs.Usage = func() { fmt.Fprint(os.Stderr, usage) }
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		os.Exit(1)
+	}
+
+	if *showVersion {
+		fmt.Printf("cloud-runner %s\n", strings.TrimSpace(version))
+		return
 	}
 
 	cfg.Cleanup = !*noCleanup

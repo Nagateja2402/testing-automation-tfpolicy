@@ -302,18 +302,19 @@ func classifyPolicyStage(c policyStageCounts) string {
 	return index.ExpectPass
 }
 
-// classifyPlanOutcome maps the plan phase to PASS/FAIL/UNKNOWN. An Init-stage
-// failure (module_policy / provider_policy evaluate at init) blocks and cancels
-// the plan, so it is checked first; otherwise the Plan stage governs, falling
-// back to run status only when no policy stage is present.
+// classifyPlanOutcome maps the plan phase to PASS/FAIL/UNKNOWN. A hard Init-stage
+// failure (module_policy / provider_policy evaluate at init) cancels the plan, so
+// it is treated as FAIL first. An Init stage that is merely unknown (e.g. a
+// provider_policy whose region resolves later) does NOT govern — the Plan stage
+// carries the real verdict. Falls back to run status when no policy stage exists.
 func classifyPlanOutcome(r *hcptf.RunResult) string {
 	if r == nil {
 		return StatusError
 	}
 
 	if init := policyStage(r.PolicyLog, "init"); init.found {
-		if v := classifyPolicyStage(init); v != index.ExpectPass {
-			return v
+		if init.mandatoryFailed > 0 || init.errored > 0 {
+			return index.ExpectFail
 		}
 	}
 

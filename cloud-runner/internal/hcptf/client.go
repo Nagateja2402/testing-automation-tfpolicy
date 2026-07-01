@@ -127,6 +127,10 @@ func (c *Client) FindWorkspaceByName(ctx context.Context, name string) (string, 
 // when the policy set is successfully created. We recover by searching for the
 // set by name after a 5xx.
 func (c *Client) CreatePolicySet(ctx context.Context, name, testID, wsID string) (string, error) {
+	return c.createPolicySet(ctx, name, testID, wsID, false)
+}
+
+func (c *Client) createPolicySet(ctx context.Context, name, testID, wsID string, retried bool) (string, error) {
 	payload := map[string]interface{}{
 		"data": map[string]interface{}{
 			"type": "policy-sets",
@@ -193,6 +197,15 @@ func (c *Client) CreatePolicySet(ctx context.Context, name, testID, wsID string)
 		}
 		fmt.Printf("  [WARN] policy set HTTP %d but found as %s — continuing\n", resp.StatusCode, psID)
 		return psID, nil
+	}
+
+	// A leftover policy set from a prior interrupted run collides by name (422).
+	if resp.StatusCode == http.StatusUnprocessableEntity && isNameConflictMsg(string(respBody)) && !retried {
+		if staleID, lookupErr := c.findPolicySetByName(ctx, name); lookupErr == nil && staleID != "" {
+			fmt.Printf("  [WARN] policy set %s already exists — deleting and retrying\n", name)
+			_ = c.DeletePolicySet(ctx, staleID)
+			return c.createPolicySet(ctx, name, testID, wsID, true)
+		}
 	}
 
 	return "", fmt.Errorf("creating policy set %s: HTTP %d: %s", name, resp.StatusCode, string(respBody))
@@ -538,6 +551,13 @@ func (c *Client) TriggerRun(ctx context.Context, wsID, cvID string, applyIfAllow
 		return result, nil
 	}
 
+	// A mandatory_overridable denial parks the run at policy_override awaiting a
+	// manual override that never comes here. Confirming apply on it would hang
+	// until the run timeout, so treat a blocked plan as terminal and stop.
+	if planPolicyBlocked(result.PolicyLog) {
+		return result, nil
+	}
+
 	// If plan passed and caller wants apply, confirm it.
 	if applyIfAllowed && isPlanPassedStatus(planStatus) {
 		if err := c.tfe.Runs.Apply(ctx, run.ID, tfe.RunApplyOptions{
@@ -830,4 +850,27 @@ func analyzeLog(log string) (passed, hasUnknowns bool) {
 		}
 	}
 	return !hasDeny, hasUnknowns
+}
+
+// planPolicyBlocked reports whether the Plan-stage policy summary in the policy
+// log shows a mandatory failure. A mandatory_overridable denial produces this
+// and parks the run at policy_override, which must not be driven to apply.
+func planPolicyBlocked(policyLog string) bool {
+	if policyLog == "" {
+		return false
+	}
+	for _, line := range strings.Split(policyLog, "\n") {
+		if !strings.Contains(line, "Plan stage") {
+			continue
+		}
+		if idx := strings.Index(line, "mandatory_failed="); idx >= 0 {
+			rest := line[idx+len("mandatory_failed="):]
+			return len(rest) > 0 && rest[0] != '0'
+		}
+	}
+	return false
+}
+
+func isNameConflictMsg(body string) bool {
+	return strings.Contains(strings.ToLower(body), "has already been taken")
 }

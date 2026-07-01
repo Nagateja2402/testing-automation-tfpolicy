@@ -68,6 +68,22 @@ func TestClassifyPlanOutcomeFromPolicyLog(t *testing.T) {
 			planStat: "planned_and_finished",
 			want:     index.ExpectPass,
 		},
+		{
+			name:     "init unknown but plan passed -> PASS, init does not override (PP-PROV-001/004/005)",
+			policyLog: "── Init stage (passed): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=1\n" +
+				"── Plan stage (passed): passed=1 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n" +
+				"── Apply stage (passed): passed=1 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n",
+			planStat: "applied",
+			want:     index.ExpectPass,
+		},
+		{
+			name:     "init unknown but plan mandatory-failed -> FAIL, plan governs (PP-PROV-002)",
+			policyLog: "── Init stage (passed): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=1\n" +
+				"── Plan stage (failed): passed=0 advisory_failed=0 mandatory_failed=1 errored=0 unknown=0\n" +
+				"── Apply stage (unreachable): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n",
+			planStat: "policy_soft_failed",
+			want:     index.ExpectFail,
+		},
 	}
 
 	for _, tc := range cases {
