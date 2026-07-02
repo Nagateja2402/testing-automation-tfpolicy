@@ -43,7 +43,7 @@ go build -o cloud-runner .
 | `--project` | — | `regression-testing` | Project name inside the org |
 | `--oauth-token-id` | — | `ot-QzmpZ8opf2RUMVAE` | VCS OAuth token ID for policy sets |
 | `--test-dir` | — | `.` (current directory) | Path to the `regression-testing/` directory |
-| `--test-id` | — | _(run all)_ | Run only a single test case by ID (e.g. `GR-DEP-002`) |
+| `--test-id` | — | _(run all)_ | Run only a single test case by ID (e.g. `getresources-cloudtrail-resolves-s3-bucket`) |
 | `--tf-version` | — | `1.15.0-policy20261106` | Terraform version for workspaces (auto-falls back if unavailable) |
 | `--no-cleanup` | — | `false` | Keep workspaces and policy sets after the run |
 | `--parallel` | — | `5` | Max number of test cases to run concurrently |
@@ -63,13 +63,13 @@ export TFE_TOKEN=<your-token>
 
 ### Run a single test case
 
-Use `--test-id` with the test directory name (e.g. `GR-DEP-002`):
+Use `--test-id` with the test directory name (e.g. `getresources-cloudtrail-resolves-s3-bucket`):
 
 ```bash
 ./cloud-runner \
   --token "$TFE_TOKEN" \
   --test-dir /path/to/regression-testing \
-  --test-id GR-DEP-002
+  --test-id getresources-cloudtrail-resolves-s3-bucket
 ```
 
 ### Keep resources for inspection after the run
@@ -78,7 +78,7 @@ Use `--test-id` with the test directory name (e.g. `GR-DEP-002`):
 ./cloud-runner \
   --token "$TFE_TOKEN" \
   --test-dir /path/to/regression-testing \
-  --test-id GR-DEP-002 \
+  --test-id getresources-cloudtrail-resolves-s3-bucket \
   --no-cleanup
 ```
 
@@ -123,8 +123,8 @@ A test case with no `main.tf`, or with all directives set to `N/A`, is skipped a
 
 ```
   TEST ID          OVERALL   PLAN_EXP  PLAN_GOT  APPL_EXP  APPL_GOT
-  ✓ GR-DEP-002     PASS      PASS      PASS      PASS      PASS
-  ✗ GR-DEP-001     FAIL      UNKNOWN   FAIL      N/A       N/A
+  ✓ getresources-cloudtrail-resolves-s3-bucket     PASS      PASS      PASS      PASS      PASS
+  ✗ getresources-vpc-has-compliant-flow-log-passes     FAIL      UNKNOWN   FAIL      N/A       N/A
     PLAN NOTE: <log excerpt>
     Run: https://app.staging.terraform.io/app/(org)/runs/run-XXXXX
 

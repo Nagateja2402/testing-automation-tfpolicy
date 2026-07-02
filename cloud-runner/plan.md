@@ -26,8 +26,8 @@ A single Go binary (`cloud-runner`) that automates the full flow using the **TFE
 
 | Test ID | EXPECT_PLAN | EXPECT_APPLY |
 |---------|-------------|--------------|
-| GR-DEP-001 | UNKNOWN | PASS |
-| GR-DEP-002 | PASS | PASS |
+| getresources-vpc-has-compliant-flow-log-passes | UNKNOWN | PASS |
+| getresources-cloudtrail-resolves-s3-bucket | PASS | PASS |
 | GR-DEP-006 | UNKNOWN | FAIL |
 | GR-DEP-007 | PASS | PASS |
 | GR-DEP-008 | PASS | PASS |
@@ -64,7 +64,7 @@ A single Go binary (`cloud-runner`) that automates the full flow using the **TFE
 - **Token**: `TFE_TOKEN` env var
 
 ### Per Test Case
-1. **Workspace**: `regtest-<TEST_ID>` (e.g. `regtest-GR-DEP-001`)
+1. **Workspace**: `regtest-<TEST_ID>` (e.g. `regtest-getresources-vpc-has-compliant-flow-log-passes`)
    - Execution mode: `remote`
    - Auto-apply: `false` (we control apply confirmation programmatically)
    - Working directory: (root)

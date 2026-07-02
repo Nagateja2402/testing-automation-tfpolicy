@@ -57,13 +57,13 @@ Examples:
 cloud-runner
 
 # Local, single test, level-1 only
-cloud-runner --skip-tfp --test-id GR-DEP-001
+cloud-runner --skip-tfp --test-id getresources-vpc-has-compliant-flow-log-passes
 
 # HCP Terraform staging, all tests
 cloud-runner --cloud
 
 # HCP Terraform staging, single test
-cloud-runner --cloud --test-id GR-DEP-001
+cloud-runner --cloud --test-id getresources-vpc-has-compliant-flow-log-passes
 ```
 
 ## `index.yml` schema
@@ -75,7 +75,7 @@ cloud-runner --cloud --test-id GR-DEP-001
 version: 1
 
 test_cases:
-  - id: GR-DEP-001
+  - id: getresources-vpc-has-compliant-flow-log-passes
     description: getresources() resolves vpc_id from aws_flow_log to aws_vpc
     suite: GR-DEP
     expect:

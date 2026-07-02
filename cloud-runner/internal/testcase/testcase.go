@@ -85,6 +85,20 @@ func DiscoverOne(testsDir string, id string, idx *index.Index) (*TestCase, error
 	return fromIndex(testsDir, *entry)
 }
 
+// DiscoverMany returns the test cases for the given IDs, in the order supplied.
+// It fails if any ID is not found in the index.
+func DiscoverMany(testsDir string, ids []string, idx *index.Index) ([]TestCase, error) {
+	var cases []TestCase
+	for _, id := range ids {
+		tc, err := DiscoverOne(testsDir, id, idx)
+		if err != nil {
+			return nil, err
+		}
+		cases = append(cases, *tc)
+	}
+	return cases, nil
+}
+
 // fromIndex builds a TestCase from an index entry by inspecting the on-disk
 // test case directory.
 func fromIndex(testsDir string, entry index.TestCase) (*TestCase, error) {

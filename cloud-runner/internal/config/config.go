@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 )
 
 const (
@@ -69,7 +70,8 @@ type Config struct {
 	// Root directory containing regression test case folders (tests/)
 	TestDir string
 
-	// Optional: run only this single test case ID (empty = run all)
+	// Optional: run only these test case IDs (empty = run all).
+	// Accepts a single ID or a comma-separated list, e.g. "id-a,id-b".
 	TestID string
 
 	// Whether to delete workspaces/policy-sets after each run (cloud mode only)
@@ -162,4 +164,20 @@ func (c *Config) FromEnv() {
 	if plugin := os.Getenv("TF_POLICY_PLUGIN"); plugin != "" {
 		c.TFPolicyPlugin = plugin
 	}
+}
+
+// TestIDs splits the TestID flag into individual IDs. It accepts a single ID
+// or a comma-separated list and trims blanks. Returns nil when TestID is empty
+// (meaning "run all").
+func (c *Config) TestIDs() []string {
+	if strings.TrimSpace(c.TestID) == "" {
+		return nil
+	}
+	var ids []string
+	for _, part := range strings.Split(c.TestID, ",") {
+		if id := strings.TrimSpace(part); id != "" {
+			ids = append(ids, id)
+		}
+	}
+	return ids
 }

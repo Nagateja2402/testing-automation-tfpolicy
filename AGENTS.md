@@ -21,7 +21,7 @@ regression-testing/
 ├── run_tests.sh          # DEPRECATED — thin shim that calls cloud-runner
 ├── results/              # Per-test logs (git-ignored)
 └── tests/
-    └── <TEST-ID>/        # e.g. GR-DEP-001/
+    └── <TEST-ID>/        # e.g. getresources-vpc-has-compliant-flow-log-passes/
         ├── *.policy.hcl
         ├── *.policytest.hcl  # Mock data only — no EXPECT directives
         └── main.tf           # Only for level 2/3 cases
@@ -42,7 +42,7 @@ regression-testing/
 ```yaml
 version: 1
 test_cases:
-  - id: GR-DEP-001
+  - id: getresources-vpc-has-compliant-flow-log-passes
     description: getresources() resolves vpc_id from aws_flow_log to aws_vpc
     suite: GR-DEP
     expect:
@@ -74,13 +74,13 @@ cloud-runner
 cloud-runner --skip-tfp
 
 # Local, single test
-cloud-runner --test-id GR-DEP-001
+cloud-runner --test-id getresources-vpc-has-compliant-flow-log-passes
 
 # HCP Terraform staging, all tests
 cloud-runner --cloud
 
 # HCP Terraform staging, single test
-cloud-runner --cloud --test-id GR-DEP-001
+cloud-runner --cloud --test-id getresources-vpc-has-compliant-flow-log-passes
 ```
 
 ## Prerequisites

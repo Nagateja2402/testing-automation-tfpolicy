@@ -11,7 +11,7 @@ regression-testing/
 ├── run_tests.sh          # DEPRECATED shim → delegates to cloud-runner
 ├── results/              # Per-test logs (git-ignored)
 └── tests/                # All test case directories
-    └── <TEST-ID>/        # e.g. GR-DEP-001/
+    └── <TEST-ID>/        # e.g. getresources-vpc-has-compliant-flow-log-passes/
         ├── *.policy.hcl      # Policy under test
         ├── *.policytest.hcl  # Mock test data (no EXPECT directives — see index.yml)
         └── main.tf           # Terraform config (only for tfp plan/apply cases)
@@ -37,7 +37,7 @@ Whether each level runs for a given test case is controlled by the `expect` valu
 version: 1
 
 test_cases:
-  - id: GR-DEP-001
+  - id: getresources-vpc-has-compliant-flow-log-passes
     description: getresources() resolves vpc_id from aws_flow_log to aws_vpc
     suite: GR-DEP
     expect:
@@ -74,10 +74,10 @@ cd cloud-runner && go build -o cloud-runner . && cd ..
 ./cloud-runner/cloud-runner --skip-tfp
 
 # Single test
-./cloud-runner/cloud-runner --test-id GR-DEP-001
+./cloud-runner/cloud-runner --test-id getresources-vpc-has-compliant-flow-log-passes
 
 # Single test, level 1 only
-./cloud-runner/cloud-runner --skip-tfp --test-id GR-DEP-001
+./cloud-runner/cloud-runner --skip-tfp --test-id getresources-vpc-has-compliant-flow-log-passes
 ```
 
 ### Cloud mode (HCP Terraform staging)
@@ -87,7 +87,7 @@ cd cloud-runner && go build -o cloud-runner . && cd ..
 ./cloud-runner/cloud-runner --cloud
 
 # Single test on staging
-./cloud-runner/cloud-runner --cloud --test-id GR-DEP-001
+./cloud-runner/cloud-runner --cloud --test-id getresources-vpc-has-compliant-flow-log-passes
 
 # Keep workspaces for inspection after run
 ./cloud-runner/cloud-runner --cloud --no-cleanup

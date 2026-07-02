@@ -4,9 +4,9 @@
 # Use cloud-runner instead:
 #   cloud-runner                          # local mode, all tests
 #   cloud-runner --skip-tfp               # local mode, tfpcli level only
-#   cloud-runner --test-id GR-DEP-001     # local mode, single test
+#   cloud-runner --test-id getresources-vpc-has-compliant-flow-log-passes     # local mode, single test
 #   cloud-runner --cloud                  # HCP Terraform staging, all tests
-#   cloud-runner --cloud --test-id GR-DEP-001
+#   cloud-runner --cloud --test-id getresources-vpc-has-compliant-flow-log-passes
 #
 # This shim is kept for one release to avoid breaking existing scripts.
 # It will be removed in the next release.

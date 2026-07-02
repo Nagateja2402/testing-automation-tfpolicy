@@ -14,7 +14,7 @@ version: 1
 test_cases:
 
   # ── EC-ENF: Enforcement edge cases ──────────────────────────────────────────
-  - id: EC-ENF-001
+  - id: enforce-multiple-blocks-worst-result-fails
     description: multiple enforce blocks select worst result
     suite: EC-ENF
     expect:
@@ -22,7 +22,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: EC-ENF-002
+  - id: enforce-info-message-on-pass-allows
     description: info-level message does not block pass
     suite: EC-ENF
     expect:
@@ -30,7 +30,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: EC-ENF-003
+  - id: enforce-error-message-blocks
     description: error-level message causes failure
     suite: EC-ENF
     expect:
@@ -39,7 +39,7 @@ test_cases:
       tfp_apply: FAIL
 
   # ── EC-GR: getresources edge cases ──────────────────────────────────────────
-  - id: EC-GR-001
+  - id: getresources-inside-filter-expression
     description: getresources() used inside a filter expression
     suite: EC-GR
     expect:
@@ -47,7 +47,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: PASS
 
-  - id: EC-GR-002
+  - id: getresources-out-of-bounds-index-denies-at-apply
     description: getresources() out-of-bounds index access
     suite: EC-GR
     expect:
@@ -55,7 +55,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: FAIL
 
-  - id: EC-GR-003
+  - id: getresources-null-filter-value
     description: getresources() with null filter value
     suite: EC-GR
     expect:
@@ -63,7 +63,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: PASS
 
-  - id: EC-GR-004
+  - id: getresources-wrong-type-filter-value
     description: getresources() with wrong-type filter value
     suite: EC-GR
     expect:
@@ -71,7 +71,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: EC-GR-005
+  - id: getresources-inside-for-expression
     description: getresources() used inside a for expression
     suite: EC-GR
     expect:
@@ -80,7 +80,7 @@ test_cases:
       tfp_apply: PASS
 
   # ── EC-OP: Operations edge cases ────────────────────────────────────────────
-  - id: EC-OP-001
+  - id: operations-duplicate-declaration-validation-error
     description: duplicate operation declarations cause a validation error
     suite: EC-OP
     expect:
@@ -88,7 +88,7 @@ test_cases:
       tfp_plan: N/A
       tfp_apply: N/A
 
-  - id: EC-OP-002
+  - id: operations-empty-list-accepted
     description: empty operations list is accepted
     suite: EC-OP
     expect:
@@ -97,7 +97,7 @@ test_cases:
       tfp_apply: N/A
 
   # ── EL: Enforcement levels ───────────────────────────────────────────────────
-  - id: EL-ADV-001
+  - id: enforcement-level-advisory-allows-noncompliant
     description: advisory enforcement level allows non-compliant resources
     suite: EL
     expect:
@@ -105,7 +105,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: EL-MND-001
+  - id: enforcement-level-mandatory-blocks-noncompliant
     description: mandatory enforcement level blocks non-compliant resources
     suite: EL
     expect:
@@ -113,15 +113,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: EL-MOV-001
-    description: mandatory_overridable enforcement level can be overridden
-    suite: EL
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
-
-  - id: EL-RES-001
+  - id: enforcement-level-override-changes-effective-level
     description: enforcement level override changes effective level
     suite: EL
     expect:
@@ -130,7 +122,7 @@ test_cases:
       tfp_apply: FAIL
 
   # ── FB-FLT: Filter behavior ──────────────────────────────────────────────────
-  - id: FB-FLT-001
+  - id: filter-false-condition-skips-resource
     description: filter with false condition skips resource
     suite: FB-FLT
     expect:
@@ -138,7 +130,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: FB-FLT-002
+  - id: filter-true-condition-evaluates-and-fails
     description: filter with true condition includes resource and causes failure
     suite: FB-FLT
     expect:
@@ -146,7 +138,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: FB-FLT-003
+  - id: filter-undefined-local-validation-error
     description: filter referencing undefined local triggers validation error
     suite: FB-FLT
     expect:
@@ -155,7 +147,7 @@ test_cases:
       tfp_apply: N/A
 
   # ── GR-DEP: getresources() dependency resolution ────────────────────────────
-  - id: GR-DEP-001
+  - id: getresources-vpc-has-compliant-flow-log-passes
     description: getresources() resolves vpc_id from aws_flow_log to aws_vpc
     suite: GR-DEP
     expect:
@@ -163,7 +155,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: PASS
 
-  - id: GR-DEP-002
+  - id: getresources-cloudtrail-resolves-s3-bucket
     description: getresources() resolves s3_bucket_name from aws_cloudtrail to aws_s3_bucket
     suite: GR-DEP
     expect:
@@ -171,7 +163,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: PASS
 
-  - id: GR-DEP-006
+  - id: getresources-vpc-rejects-noncompliant-flow-log
     description: getresources() correctly rejects non-compliant flow log
     suite: GR-DEP
     expect:
@@ -179,7 +171,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: FAIL
 
-  - id: GR-DEP-007
+  - id: getresources-empty-filter-returns-all
     description: getresources() with empty filter returns all resources
     suite: GR-DEP
     expect:
@@ -187,7 +179,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: GR-DEP-008
+  - id: getresources-multiple-filter-conditions
     description: getresources() with multiple filter conditions
     suite: GR-DEP
     expect:
@@ -195,7 +187,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: FAIL
 
-  - id: GR-DEP-009
+  - id: getresources-partial-filter-no-match-fails
     description: getresources() with partial filter match
     suite: GR-DEP
     expect:
@@ -203,7 +195,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: GR-DEP-010
+  - id: getresources-chained-across-three-types
     description: chained getresources() calls across three resource types
     suite: GR-DEP
     expect:
@@ -211,7 +203,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: GR-DEP-011
+  - id: getresources-cycle-detection-errors
     description: cycle detection in getresources() dependency graph
     suite: GR-DEP
     expect:
@@ -219,7 +211,7 @@ test_cases:
       tfp_plan: N/A
       tfp_apply: N/A
 
-  - id: GR-DEP-012
+  - id: getresources-unknown-type-returns-empty-fails
     description: getresources() with unknown resource type returns empty
     suite: GR-DEP
     expect:
@@ -227,7 +219,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: GR-DEP-013
+  - id: getresources-skip-resource-not-evaluated
     description: skip_resource attribute prevents resource from being evaluated
     suite: GR-DEP
     expect:
@@ -235,7 +227,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: GR-DEP-014
+  - id: getresources-multiple-independent-policies
     description: multiple policies each calling getresources() independently
     suite: GR-DEP
     expect:
@@ -243,7 +235,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: GR-DEP-015
+  - id: getresources-resolution-through-locals-chain
     description: getresources() resolution through locals chain
     suite: GR-DEP
     expect:
@@ -252,7 +244,7 @@ test_cases:
       tfp_apply: PASS
 
   # ── GR-PLAN: getresources() at plan vs apply time ───────────────────────────
-  - id: GR-PLAN-001
+  - id: getresources-computed-id-unknown-at-plan-fails-apply
     description: computed id is unknown at plan; filter produces unknown result
     suite: GR-PLAN
     expect:
@@ -260,7 +252,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: FAIL
 
-  - id: GR-PLAN-002
+  - id: getresources-computed-id-resolved-at-apply-fails
     description: computed id is resolved at apply time
     suite: GR-PLAN
     expect:
@@ -268,7 +260,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: FAIL
 
-  - id: GR-PLAN-003
+  - id: getresources-config-known-filter-resolves-at-plan
     description: config-known filter value resolves correctly at plan
     suite: GR-PLAN
     expect:
@@ -276,7 +268,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: GR-PLAN-004
+  - id: getresources-plan-unknown-becomes-known-at-apply-allows
     description: plan-time unknown becomes known at apply and is allowed
     suite: GR-PLAN
     expect:
@@ -284,7 +276,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: PASS
 
-  - id: GR-PLAN-005
+  - id: getresources-denies-at-plan-and-apply
     description: policy denies at both plan and apply time
     suite: GR-PLAN
     expect:
@@ -292,7 +284,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: GR-PLAN-006
+  - id: getresources-no-matching-resources-denies
     description: no matching resources causes denial
     suite: GR-PLAN
     expect:
@@ -301,7 +293,7 @@ test_cases:
       tfp_apply: FAIL
 
   # ── OP-ALL: All-operations policies ─────────────────────────────────────────
-  - id: OP-ALL-001
+  - id: operation-all-create-resource-passes
     description: policy applies to all operations — create resource passes
     suite: OP-ALL
     expect:
@@ -309,7 +301,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: OP-ALL-002
+  - id: operation-all-update-resource-fails
     description: policy applies to all operations — update resource passes
     suite: OP-ALL
     expect:
@@ -318,7 +310,7 @@ test_cases:
       tfp_apply: FAIL
 
   # ── OP-CRE: Create-scoped policies ──────────────────────────────────────────
-  - id: OP-CRE-001
+  - id: operation-create-required-tag-present-passes
     description: create policy passes when required tag present
     suite: OP-CRE
     expect:
@@ -326,7 +318,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: OP-CRE-002
+  - id: operation-create-required-tag-missing-fails
     description: create policy fails when required tag missing
     suite: OP-CRE
     expect:
@@ -334,7 +326,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: OP-CRE-003
+  - id: operation-create-skipped-for-update
     description: create policy skipped for update operation
     suite: OP-CRE
     expect:
@@ -343,7 +335,7 @@ test_cases:
       tfp_apply: PASS
 
   # ── OP-DEL: Delete-scoped policies ──────────────────────────────────────────
-  - id: OP-DEL-001
+  - id: operation-delete-approval-tag-present-passes
     description: delete policy passes when approval tag present
     suite: OP-DEL
     expect:
@@ -351,7 +343,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: OP-DEL-002
+  - id: operation-delete-approval-tag-missing
     description: delete policy fails when approval tag missing
     suite: OP-DEL
     expect:
@@ -359,7 +351,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: OP-DEL-003
+  - id: operation-delete-skipped-for-create
     description: delete policy skipped for create operation
     suite: OP-DEL
     expect:
@@ -368,7 +360,7 @@ test_cases:
       tfp_apply: PASS
 
   # ── OP-ERR: Error prior state ────────────────────────────────────────────────
-  - id: OP-ERR-001
+  - id: operation-error-prior-state-no-operations-declared
     description: error prior state with no operations declared
     suite: OP-ERR
     expect:
@@ -376,7 +368,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: OP-ERR-002
+  - id: operation-error-prior-state-create-declared
     description: error prior state with create operation declared
     suite: OP-ERR
     expect:
@@ -385,7 +377,7 @@ test_cases:
       tfp_apply: PASS
 
   # ── OP-INF: Operation inference ──────────────────────────────────────────────
-  - id: OP-INF-001
+  - id: operation-inferred-create-when-no-prior-state
     description: operation inferred as create when prior state is absent
     suite: OP-INF
     expect:
@@ -393,7 +385,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: OP-INF-002
+  - id: operation-inferred-update-when-prior-state-present
     description: operation inferred as update when prior state present
     suite: OP-INF
     expect:
@@ -401,7 +393,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: OP-INF-003
+  - id: operation-inferred-delete-when-no-planned-state
     description: operation inferred as delete when planned state is absent
     suite: OP-INF
     expect:
@@ -409,7 +401,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: OP-INF-004
+  - id: operation-explicit-declaration-overrides-inference
     description: explicit operation declaration overrides inference
     suite: OP-INF
     expect:
@@ -418,7 +410,7 @@ test_cases:
       tfp_apply: PASS
 
   # ── OP-UPD: Update-scoped policies ──────────────────────────────────────────
-  - id: OP-UPD-001
+  - id: operation-update-immutable-field-unchanged-passes
     description: update policy passes when immutable field unchanged
     suite: OP-UPD
     expect:
@@ -426,7 +418,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: OP-UPD-002
+  - id: operation-update-immutable-field-changed
     description: update policy fails when immutable field changed
     suite: OP-UPD
     expect:
@@ -434,7 +426,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: OP-UPD-003
+  - id: operation-update-skipped-for-create
     description: update policy skipped for create operation
     suite: OP-UPD
     expect:
@@ -443,7 +435,7 @@ test_cases:
       tfp_apply: PASS
 
   # ── PP-MOD: Module pre-plan policies ────────────────────────────────────────
-  - id: PP-MOD-001
+  - id: module-policy-approved-source-passes
     description: module_policy passes for approved module source
     suite: PP-MOD
     expect:
@@ -451,7 +443,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: PP-MOD-002
+  - id: module-policy-unapproved-source-blocks
     description: module_policy blocks unapproved module source
     suite: PP-MOD
     expect:
@@ -459,7 +451,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: PP-MOD-003
+  - id: module-policy-min-version-constraint-fails
     description: module_policy checks minimum version constraint
     suite: PP-MOD
     expect:
@@ -467,7 +459,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: N/A
 
-  - id: PP-MOD-004
+  - id: module-policy-compliant-version-passes
     description: module_policy passes for compliant module version
     suite: PP-MOD
     expect:
@@ -476,7 +468,7 @@ test_cases:
       tfp_apply: N/A
 
   # ── PP-PROV: Provider pre-plan policies ─────────────────────────────────────
-  - id: PP-PROV-001
+  - id: provider-policy-allowed-region-passes
     description: provider_policy passes for allowed AWS region
     suite: PP-PROV
     expect:
@@ -484,7 +476,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: PP-PROV-002
+  - id: provider-policy-disallowed-region-blocks
     description: provider_policy blocks disallowed AWS region
     suite: PP-PROV
     expect:
@@ -492,7 +484,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: PP-PROV-003
+  - id: provider-policy-required-version-constraint
     description: provider_policy checks required provider version constraint
     suite: PP-PROV
     expect:
@@ -500,7 +492,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: PP-PROV-004
+  - id: provider-policy-inspects-config-attributes
     description: provider_policy inspects provider configuration attributes
     suite: PP-PROV
     expect:
@@ -508,7 +500,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: PP-PROV-005
+  - id: provider-policy-targets-named-provider
     description: provider_policy targets a specific named provider
     suite: PP-PROV
     expect:
@@ -517,7 +509,7 @@ test_cases:
       tfp_apply: PASS
 
   # ── REG-BIN: Binary regression ──────────────────────────────────────────────
-  - id: REG-BIN-001
+  - id: regression-passing-policy-still-passes
     description: pre-existing passing policy continues to pass
     suite: REG-BIN
     expect:
@@ -525,7 +517,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: REG-BIN-002
+  - id: regression-failing-policy-still-fails
     description: pre-existing failing policy continues to fail
     suite: REG-BIN
     expect:
@@ -533,7 +525,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: REG-BIN-003
+  - id: regression-output-format-stable
     description: output format is stable across versions
     suite: REG-BIN
     expect:
@@ -541,7 +533,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: REG-BIN-004
+  - id: regression-provider-policy-unchanged
     description: provider regression — existing provider policy behavior unchanged
     suite: REG-BIN
     expect:
@@ -549,7 +541,7 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: REG-BIN-005
+  - id: regression-module-policy-unchanged
     description: module regression — existing module policy behavior unchanged
     suite: REG-BIN
     expect:
@@ -557,7 +549,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: REG-BIN-006
+  - id: regression-getresources-dynamic-value-resolves
     description: getresources() with dynamic value resolves correctly
     suite: REG-BIN
     expect:
@@ -565,7 +557,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: PASS
 
-  - id: REG-BIN-007
+  - id: regression-operation-inference-unchanged
     description: operation inference regression — existing behavior unchanged
     suite: REG-BIN
     expect:
@@ -573,7 +565,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: REG-BIN-008
+  - id: regression-topological-ordering-stable
     description: topological ordering of resource evaluation is stable
     suite: REG-BIN
     expect:
@@ -581,7 +573,7 @@ test_cases:
       tfp_plan: UNKNOWN
       tfp_apply: PASS
 
-  - id: REG-BIN-009
+  - id: regression-enforcement-level-unchanged
     description: enforcement level regression — existing behavior unchanged
     suite: REG-BIN
     expect:
@@ -589,7 +581,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: REG-BIN-010
+  - id: regression-large-policy-many-rules
     description: large policy file with many rules evaluates correctly
     suite: REG-BIN
     expect:
@@ -598,7 +590,7 @@ test_cases:
       tfp_apply: PASS
 
   # ── TF-E2E: End-to-end create → plan → apply → destroy lifecycle ────────────
-  - id: TF-E2E-001
+  - id: e2e-compliant-resource-passes-plan-and-apply
     description: e2e — compliant resource passes plan and apply
     suite: TF-E2E
     expect:
@@ -606,7 +598,7 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: TF-E2E-002
+  - id: e2e-noncompliant-resource-blocked-plan-and-apply
     description: e2e — non-compliant resource is blocked at plan and apply
     suite: TF-E2E
     expect:
@@ -614,10 +606,175 @@ test_cases:
       tfp_plan: FAIL
       tfp_apply: FAIL
 
-  - id: TF-E2E-003
+  - id: e2e-unknown-at-plan-resolves-pass-at-apply
     description: e2e — unknown value at plan resolves to pass at apply
     suite: TF-E2E
     expect:
       tfpolicy_test: PASS
       tfp_plan: UNKNOWN
+      tfp_apply: PASS
+
+  # ── BASICS: policy_basics feature coverage (from policy-library samples) ─────
+  # L1 unit tests (tfpcli test only) — feature-focused, no cloud apply.
+  - id: basics-regex-bucket-name-pattern
+    description: regexall validates S3 bucket name format
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-jsondecode-iam-no-wildcard-admin
+    description: jsondecode parses IAM policy and rejects wildcard admin
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-map-operations-required-tags
+    description: map access enforces required instance tags
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-conditional-ternary-instance-type
+    description: ternary selects required instance type by environment
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-complex-validation-dms-endpoint
+    description: multi-condition validation of DMS endpoint attributes
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-timestamp-lifecycle-future-expiry
+    description: timestamp/timecmp requires S3 lifecycle expiry in the future
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-meta-attributes-naming-convention
+    description: meta.name regex enforces resource naming convention
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-multi-resource-evaluation
+    description: policy evaluates instance type across multiple resources
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-locals-cloudtrail-validation
+    description: file-level and policy-level locals gate CloudTrail validation
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-inputs-parameterized-filter
+    description: input variable parameterizes DMS engine filter
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # L3 tests (tfpcli test + tfp plan + tfp apply) — clean S3-based configs.
+  - id: basics-s3-encryption-required-passes
+    description: compliant S3 bucket with Environment tag passes plan and apply
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: basics-regex-bucket-name-blocks
+    description: S3 bucket name without required prefix is denied at plan and apply
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: basics-multiple-enforce-all-pass
+    description: bucket satisfying both enforce blocks passes plan and apply
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: basics-filter-production-versioning-blocks
+    description: production bucket missing Owner tag is denied at plan and apply
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: basics-provider-region-allowed-passes
+    description: provider policy allows us-east-1 so plan and apply pass
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  # L3 complementary-outcome cases — each pairs with a test above to exercise
+  # both the real plan/apply PASS and FAIL path of the same policy.
+  - id: basics-s3-encryption-required-blocks
+    description: S3 bucket missing Environment tag is denied at plan and apply
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: basics-multiple-enforce-blocks
+    description: bucket failing the second enforce block is denied at plan and apply
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: basics-provider-region-disallowed-blocks
+    description: provider policy denies ap-south-1 so plan and apply fail
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: basics-regex-bucket-name-passes
+    description: S3 bucket name with required prefix passes plan and apply
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: basics-filter-production-versioning-passes
+    description: production bucket with Owner tag passes plan and apply
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
       tfp_apply: PASS

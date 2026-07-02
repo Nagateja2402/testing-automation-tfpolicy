@@ -29,7 +29,7 @@ Flags:
   --skip-tfp      Local mode only: skip tfp plan/apply (tfpcli level only)
   --test-dir      Path to regression-testing/tests/ directory (default: ./tests)
   --index         Path to index.yml (default: <parent of test-dir>/index.yml)
-  --test-id       Run only this test case ID (default: run all)
+  --test-id       Run only these test case ID(s) — single or comma-separated (default: run all)
   --parallel      Max concurrent test cases (default: 5)
   --version       Print cloud-runner version and exit
 
@@ -39,7 +39,7 @@ Flags:
   --host          TFE host (default: app.staging.terraform.io)
   --project       TFE project name (default: regression-testing)
   --tf-version    Terraform version for workspaces (default: 1.15.0-policy20261106)
-  --no-cleanup    Keep workspaces and policy sets after run (default: cleanup)
+  --no-cleanup    Keep workspaces and policy sets after run (also prints run-id per test) (default: cleanup)
   --timeout       Per-run timeout in minutes (default: 20)
   --purge         Delete all regtest workspaces and policy sets then exit
   --vcs-repo      GitHub repo (owner/name) for VCS-backed policy sets (env: VCS_REPO)
@@ -56,13 +56,19 @@ Examples:
   cloud-runner
 
   # Local, single test, tfpcli only
-  cloud-runner --skip-tfp --test-id GR-DEP-001
+  cloud-runner --skip-tfp --test-id getresources-vpc-has-compliant-flow-log-passes
+
+  # Local, multiple specific tests (comma-separated)
+  cloud-runner --skip-tfp --test-id enforce-error-message-blocks,filter-false-condition-skips-resource
 
   # HCP Terraform staging, all tests
   cloud-runner --cloud
 
   # HCP Terraform staging, single test
-  cloud-runner --cloud --test-id GR-DEP-001
+  cloud-runner --cloud --test-id getresources-vpc-has-compliant-flow-log-passes
+
+  # HCP Terraform, keep workspaces and print each run-id
+  cloud-runner --cloud --no-cleanup --test-id basics-s3-encryption-required-passes,basics-regex-bucket-name-blocks
 `
 
 func main() {
@@ -77,7 +83,7 @@ func main() {
 	// Common
 	fs.StringVar(&cfg.TestDir, "test-dir", "tests", "Path to regression-testing/tests/ directory")
 	fs.StringVar(&cfg.IndexPath, "index", "", "Path to index.yml (default: <test-dir>/index.yml)")
-	fs.StringVar(&cfg.TestID, "test-id", "", "Single test case ID to run")
+	fs.StringVar(&cfg.TestID, "test-id", "", "Test case ID(s) to run — single or comma-separated (default: run all)")
 	fs.IntVar(&cfg.Parallel, "parallel", config.DefaultParallel, "Max concurrent test cases")
 
 	// Cloud-only
@@ -181,12 +187,11 @@ func runLocal(cfg *config.Config, idx *index.Index) {
 	// Discover test cases.
 	var cases []testcase.TestCase
 	var err error
-	if cfg.TestID != "" {
-		tc, err := testcase.DiscoverOne(cfg.TestDir, cfg.TestID, idx)
+	if ids := cfg.TestIDs(); len(ids) > 0 {
+		cases, err = testcase.DiscoverMany(cfg.TestDir, ids, idx)
 		if err != nil {
 			fatal("%v", err)
 		}
-		cases = append(cases, *tc)
 	} else {
 		cases, err = testcase.DiscoverAll(cfg.TestDir, idx)
 		if err != nil {
@@ -341,17 +346,20 @@ func runCloud(cfg *config.Config, idx *index.Index, _ bool) {
 
 	// Discover test cases that require a cloud run.
 	var cases []testcase.TestCase
-	if cfg.TestID != "" {
-		tc, err := testcase.DiscoverOne(cfg.TestDir, cfg.TestID, idx)
+	if ids := cfg.TestIDs(); len(ids) > 0 {
+		selected, err := testcase.DiscoverMany(cfg.TestDir, ids, idx)
 		if err != nil {
 			fatal("%v", err)
 		}
-		if !tc.NeedsCloudRun() {
-			fmt.Printf("Test case %s does not require a cloud run (no main.tf or both N/A).\n", cfg.TestID)
-			os.Exit(0)
+		for _, tc := range selected {
+			if !tc.NeedsCloudRun() {
+				fmt.Printf("Skipping %s — does not require a cloud run (no main.tf or both N/A).\n", tc.ID)
+				continue
+			}
+			cases = append(cases, tc)
 		}
-		cases = append(cases, *tc)
 	} else {
+		var err error
 		cases, err = testcase.Discover(cfg.TestDir, idx)
 		if err != nil {
 			fatal("discovering test cases: %v", err)
@@ -378,16 +386,16 @@ func runCloud(cfg *config.Config, idx *index.Index, _ bool) {
 	}
 
 	r := runner.New(client, cfg, projectID, resultsDir)
-	results := runCloudParallel(ctx, r, cases, cfg.Parallel)
+	results := runCloudParallel(ctx, r, cases, cfg.Parallel, !cfg.Cleanup)
 
 	sort.Slice(results, func(i, j int) bool { return results[i].TestID < results[j].TestID })
 
-	printCloudResults(results, cfg.Org)
+	printCloudResults(results, cfg.Host, cfg.Org)
 	exitCode := printCloudSummary(results)
 	os.Exit(exitCode)
 }
 
-func runCloudParallel(ctx context.Context, r *runner.Runner, cases []testcase.TestCase, maxParallel int) []*runner.TestResult {
+func runCloudParallel(ctx context.Context, r *runner.Runner, cases []testcase.TestCase, maxParallel int, showRunID bool) []*runner.TestResult {
 	sem := make(chan struct{}, maxParallel)
 	var mu sync.Mutex
 	var wg sync.WaitGroup
@@ -403,8 +411,13 @@ func runCloudParallel(ctx context.Context, r *runner.Runner, cases []testcase.Te
 
 			fmt.Printf("  [START] %s\n", tc.ID)
 			res := r.Run(ctx, tc)
-			fmt.Printf("  [DONE]  %s → %s (%.1fs)\n",
-				tc.ID, res.Overall(), res.Duration.Seconds())
+			if showRunID && res.RunID != "" {
+				fmt.Printf("  [DONE]  %s → %s (%.1fs) [run-id: %s]\n",
+					tc.ID, res.Overall(), res.Duration.Seconds(), res.RunID)
+			} else {
+				fmt.Printf("  [DONE]  %s → %s (%.1fs)\n",
+					tc.ID, res.Overall(), res.Duration.Seconds())
+			}
 
 			mu.Lock()
 			results = append(results, res)
@@ -431,7 +444,7 @@ func printCloudHeader(cfg *config.Config, count int) {
 	fmt.Println("══════════════════════════════════════════════════════════════════")
 }
 
-func printCloudResults(results []*runner.TestResult, org string) {
+func printCloudResults(results []*runner.TestResult, host, org string) {
 	fmt.Println()
 	fmt.Println("──────────────────────────────────────────────────────────────────")
 	fmt.Printf("  %-15s  %-8s  %-8s  %-8s  %-8s  %-8s  %s\n",
@@ -463,7 +476,7 @@ func printCloudResults(results []*runner.TestResult, org string) {
 			fmt.Printf("    [APPLY] %s\n", r.Apply.Note)
 		}
 		if r.RunID != "" {
-			fmt.Printf("    Run: https://%s/app/%s/runs/%s\n", "app.staging.terraform.io", org, r.RunID)
+			fmt.Printf("    Run: https://%s/app/%s/runs/%s\n", host, org, r.RunID)
 		}
 	}
 	fmt.Println("──────────────────────────────────────────────────────────────────")
