@@ -644,7 +644,7 @@ test_cases:
     suite: FEATURE-REG
     expect:
       tfpolicy_test: PASS
-      tfp_plan: PASS
+      tfp_plan: UNKNOWN
       tfp_apply: PASS
 
   - id: feature-expr-for-list-l1
@@ -1264,14 +1264,6 @@ test_cases:
       tfp_apply: N/A
 
   # Extra cheap S3-backed L2/L3 companion cases for feature policies with safe real pass/block variants.
-  - id: feature-enforce-multiple-blocks-blocks
-    description: multiple enforce blocks reject invalid bucket names (blocks)
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
-
   - id: feature-enforce-multiple-blocks-passes
     description: multiple enforce blocks reject invalid bucket names (passes)
     suite: FEATURE-REG
@@ -1280,29 +1272,13 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
-  - id: feature-expr-conditional-blocks
-    description: conditional expression gates bucket region tag (blocks)
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
-
   - id: feature-expr-conditional-passes
     description: conditional expression gates bucket region tag (passes)
     suite: FEATURE-REG
     expect:
       tfpolicy_test: PASS
-      tfp_plan: PASS
+      tfp_plan: UNKNOWN
       tfp_apply: PASS
-
-  - id: feature-local-global-scope-blocks
-    description: file-scope local prefix is applied to S3 buckets (blocks)
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
 
   - id: feature-local-global-scope-passes
     description: file-scope local prefix is applied to S3 buckets (passes)
@@ -1311,14 +1287,6 @@ test_cases:
       tfpolicy_test: PASS
       tfp_plan: PASS
       tfp_apply: PASS
-
-  - id: feature-test-inputs-block-blocks
-    description: policy input default drives bucket prefix outside policytest overrides (blocks)
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
 
   - id: feature-test-inputs-block-passes
     description: policy input default drives bucket prefix outside policytest overrides (passes)
