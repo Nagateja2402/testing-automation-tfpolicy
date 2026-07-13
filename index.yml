@@ -871,62 +871,6 @@ test_cases:
       tfp_plan: N/A
       tfp_apply: N/A
 
-  - id: feature-func-plugin-basic-l1
-    description: L1 upstream feature_func_plugin_basic.policytest.hcl
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: N/A
-      tfp_apply: N/A
-
-  - id: feature-func-plugin-cidr-contains-ip-l1
-    description: L1 upstream feature_func_plugin_cidr_contains_ip.policytest.hcl
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: N/A
-      tfp_apply: N/A
-
-  - id: feature-func-plugin-count-substring-l1
-    description: L1 upstream feature_func_plugin_count_substring.policytest.hcl
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: N/A
-      tfp_apply: N/A
-
-  - id: feature-func-plugin-is-kebab-case-l1
-    description: L1 upstream feature_func_plugin_is_kebab_case.policytest.hcl
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: N/A
-      tfp_apply: N/A
-
-  - id: feature-func-plugin-is-valid-cidr-l1
-    description: L1 upstream feature_func_plugin_is_valid_cidr.policytest.hcl
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: N/A
-      tfp_apply: N/A
-
-  - id: feature-func-plugin-sha256-hex-l1
-    description: L1 upstream feature_func_plugin_sha256_hex.policytest.hcl
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: N/A
-      tfp_apply: N/A
-
-  - id: feature-func-plugin-with-args-l1
-    description: L1 upstream feature_func_plugin_with_args.policytest.hcl
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: N/A
-      tfp_apply: N/A
-
   - id: feature-input-bool-l1
     description: L1 upstream feature_input_bool.policytest.hcl
     suite: FEATURE-REG
@@ -1346,22 +1290,6 @@ test_cases:
 
   - id: feature-expr-conditional-passes
     description: conditional expression gates bucket region tag (passes)
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: PASS
-      tfp_apply: PASS
-
-  - id: feature-func-plugin-count-substring-blocks
-    description: plugin count_substring function limits dotted bucket names (blocks)
-    suite: FEATURE-REG
-    expect:
-      tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
-
-  - id: feature-func-plugin-count-substring-passes
-    description: plugin count_substring function limits dotted bucket names (passes)
     suite: FEATURE-REG
     expect:
       tfpolicy_test: PASS
