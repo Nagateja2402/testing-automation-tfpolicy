@@ -589,6 +589,833 @@ test_cases:
       tfp_plan: PASS
       tfp_apply: PASS
 
+  - id: feature-toplevel-input-block-passes
+    description: feature_toplevel_input_block default input and length check pass for compliant S3 bucket
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  # ── FEATURE-REG: tfpolicy feature regression coverage (generated) ─────────────
+  # L1 mirrors upstream policytest semantics exactly; safe S3-backed L1 cases also carry direct plan/apply smoke fixtures.
+  - id: feature-enforce-error-message-l1
+    description: L1 upstream feature_enforce_error_message.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-enforce-info-message-l1
+    description: L1 upstream feature_enforce_info_message.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-enforce-multiple-blocks-l1
+    description: L1 upstream feature_enforce_multiple_blocks.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-enforce-single-block-l1
+    description: L1 upstream feature_enforce_single_block.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-expr-attrs-reference-l1
+    description: L1 upstream feature_expr_attrs_reference.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-expr-conditional-l1
+    description: L1 upstream feature_expr_conditional.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-expr-for-list-l1
+    description: L1 upstream feature_expr_for_list.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-expr-for-map-l1
+    description: L1 upstream feature_expr_for_map.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-expr-input-reference-l1
+    description: L1 upstream feature_expr_input_reference.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-expr-local-reference-l1
+    description: L1 upstream feature_expr_local_reference.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-expr-meta-reference-l1
+    description: L1 upstream feature_expr_meta_reference.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-expr-null-handling-l1
+    description: L1 upstream feature_expr_null_handling.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-expr-prior-attrs-l1
+    description: L1 upstream feature_expr_prior_attrs.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-expr-splat-l1
+    description: L1 upstream feature_expr_splat.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-expr-type-conversion-l1
+    description: L1 upstream feature_expr_type_conversion.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-expr-unknown-handling-l1
+    description: L1 upstream feature_expr_unknown_handling.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-core-contains-l1
+    description: L1 upstream feature_func_core_contains.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-distinct-l1
+    description: L1 upstream feature_func_core_distinct.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-flatten-l1
+    description: L1 upstream feature_func_core_flatten.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-getdatasource-by-ami-l1
+    description: L1 upstream feature_func_core_getdatasource_by_ami.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-core-getresources-l1
+    description: L1 upstream feature_func_core_getresources.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-core-join-l1
+    description: L1 upstream feature_func_core_join.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-jsondecode-l1
+    description: L1 upstream feature_func_core_jsondecode.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-jsonencode-l1
+    description: L1 upstream feature_func_core_jsonencode.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-keys-l1
+    description: L1 upstream feature_func_core_keys.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-length-l1
+    description: L1 upstream feature_func_core_length.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-max-l1
+    description: L1 upstream feature_func_core_max.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-min-l1
+    description: L1 upstream feature_func_core_min.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-reverse-l1
+    description: L1 upstream feature_func_core_reverse.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-semverconstraint-l1
+    description: L1 upstream feature_func_core_semverconstraint.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-split-l1
+    description: L1 upstream feature_func_core_split.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-try-l1
+    description: L1 upstream feature_func_core_try.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-values-l1
+    description: L1 upstream feature_func_core_values.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-core-valuetostring-l1
+    description: L1 upstream feature_func_core_valuetostring.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-plugin-basic-l1
+    description: L1 upstream feature_func_plugin_basic.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-plugin-cidr-contains-ip-l1
+    description: L1 upstream feature_func_plugin_cidr_contains_ip.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-plugin-count-substring-l1
+    description: L1 upstream feature_func_plugin_count_substring.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-plugin-is-kebab-case-l1
+    description: L1 upstream feature_func_plugin_is_kebab_case.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-plugin-is-valid-cidr-l1
+    description: L1 upstream feature_func_plugin_is_valid_cidr.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-plugin-sha256-hex-l1
+    description: L1 upstream feature_func_plugin_sha256_hex.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-plugin-with-args-l1
+    description: L1 upstream feature_func_plugin_with_args.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-input-bool-l1
+    description: L1 upstream feature_input_bool.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-input-default-l1
+    description: L1 upstream feature_input_default.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-input-list-l1
+    description: L1 upstream feature_input_list.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-input-map-l1
+    description: L1 upstream feature_input_map.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-input-module-scope-l1
+    description: L1 upstream feature_input_module_scope.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-input-number-l1
+    description: L1 upstream feature_input_number.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-input-object-l1
+    description: L1 upstream feature_input_object.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-input-sensitive-l1
+    description: L1 upstream feature_input_sensitive.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-input-string-l1
+    description: L1 upstream feature_input_string.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-local-global-scope-l1
+    description: L1 upstream feature_local_global_scope.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-local-module-scope-l1
+    description: L1 upstream feature_local_module_scope.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-metaarg-enforcement-advisory-l1
+    description: L1 upstream feature_metaarg_enforcement_advisory.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-metaarg-enforcement-mandatory-l1
+    description: L1 upstream feature_metaarg_enforcement_mandatory.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-metaarg-enforcement-overridable-l1
+    description: L1 upstream feature_metaarg_enforcement_overridable.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-metaarg-filter-l1
+    description: L1 upstream feature_metaarg_filter.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-metaarg-operations-create-l1
+    description: L1 upstream feature_metaarg_operations_create.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-metaarg-operations-delete-l1
+    description: L1 upstream feature_metaarg_operations_delete.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-metaarg-operations-update-l1
+    description: L1 upstream feature_metaarg_operations_update.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-preplan-module-meta-source-l1
+    description: L1 upstream feature_preplan_module_meta_source.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-preplan-module-meta-version-l1
+    description: L1 upstream feature_preplan_module_meta_version.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-preplan-provider-meta-type-l1
+    description: L1 upstream feature_preplan_provider_meta_type.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-preplan-provider-meta-version-l1
+    description: L1 upstream feature_preplan_provider_meta_version.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-result-allow-l1
+    description: L1 upstream feature_result_allow.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-result-deny-l1
+    description: L1 upstream feature_result_deny.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-result-error-l1
+    description: L1 upstream feature_result_error.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-result-unknown-l1
+    description: L1 upstream feature_result_unknown.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-state-prior-attrs-on-delete-l1
+    description: L1 upstream feature_state_prior_attrs_on_delete.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-state-prior-attrs-on-update-l1
+    description: L1 upstream feature_state_prior_attrs_on_update.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-target-module-l1
+    description: L1 upstream feature_target_module.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-target-provider-l1
+    description: L1 upstream feature_target_provider.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-target-resource-l1
+    description: L1 upstream feature_target_resource.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-target-resource-wildcard-l1
+    description: L1 upstream feature_target_resource_wildcard.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-cross-resource-reference-l1
+    description: L1 upstream feature_test_cross_resource_reference.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-expect-failure-false-l1
+    description: L1 upstream feature_test_expect_failure_false.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-expect-failure-true-l1
+    description: L1 upstream feature_test_expect_failure_true.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-input-varfile-l1
+    description: L1 upstream feature_test_input_varfile.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-inputs-block-l1
+    description: L1 upstream feature_test_inputs_block.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-test-locals-l1
+    description: L1 upstream feature_test_locals.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-mock-data-l1
+    description: L1 upstream feature_test_mock_data.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-mock-module-l1
+    description: L1 upstream feature_test_mock_module.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-mock-plugin-l1
+    description: L1 upstream feature_test_mock_plugin.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-mock-provider-l1
+    description: L1 upstream feature_test_mock_provider.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-mock-resource-l1
+    description: L1 upstream feature_test_mock_resource.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-plugin-inline-call-l1
+    description: L1 upstream feature_test_plugin_inline_call.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-skip-attribute-l1
+    description: L1 upstream feature_test_skip_attribute.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-test-terraform-config-l1
+    description: L1 upstream feature_test_terraform_config.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-toplevel-input-block-l1
+    description: L1 upstream feature_toplevel_input_block.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-toplevel-locals-block-l1
+    description: L1 upstream feature_toplevel_locals_block.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-toplevel-plugin-block-l1
+    description: L1 upstream feature_toplevel_plugin_block.policytest.hcl
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  # Extra cheap S3-backed L2/L3 companion cases for feature policies with safe real pass/block variants.
+  - id: feature-enforce-multiple-blocks-blocks
+    description: multiple enforce blocks reject invalid bucket names (blocks)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: feature-enforce-multiple-blocks-passes
+    description: multiple enforce blocks reject invalid bucket names (passes)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-expr-conditional-blocks
+    description: conditional expression gates bucket region tag (blocks)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: feature-expr-conditional-passes
+    description: conditional expression gates bucket region tag (passes)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-func-plugin-count-substring-blocks
+    description: plugin count_substring function limits dotted bucket names (blocks)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: feature-func-plugin-count-substring-passes
+    description: plugin count_substring function limits dotted bucket names (passes)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-local-global-scope-blocks
+    description: file-scope local prefix is applied to S3 buckets (blocks)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: feature-local-global-scope-passes
+    description: file-scope local prefix is applied to S3 buckets (passes)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-test-inputs-block-blocks
+    description: policy input default drives bucket prefix outside policytest overrides (blocks)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  - id: feature-test-inputs-block-passes
+    description: policy input default drives bucket prefix outside policytest overrides (passes)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: feature-toplevel-input-block-blocks
+    description: top-level input minimum bucket-name length (blocks)
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+
+  # ── END FEATURE-REG ─────────────────────────────────────────────────────────
+
+
+
+
+
+
+
   # ── TF-E2E: End-to-end create → plan → apply → destroy lifecycle ────────────
   - id: e2e-compliant-resource-passes-plan-and-apply
     description: e2e — compliant resource passes plan and apply
