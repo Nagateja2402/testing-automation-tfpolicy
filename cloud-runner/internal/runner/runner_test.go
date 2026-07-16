@@ -16,7 +16,7 @@ func TestClassifyPlanOutcomeFromPolicyLog(t *testing.T) {
 		want      string
 	}{
 		{
-			name:     "mandatory failed at plan -> FAIL (FB-FLT-002)",
+			name: "mandatory failed at plan -> FAIL (FB-FLT-002)",
 			policyLog: "── Init stage (passed): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n" +
 				"── Plan stage (failed): passed=0 advisory_failed=0 mandatory_failed=1 errored=0 unknown=0\n" +
 				"── Apply stage (unreachable): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n",
@@ -24,7 +24,7 @@ func TestClassifyPlanOutcomeFromPolicyLog(t *testing.T) {
 			want:     index.ExpectFail,
 		},
 		{
-			name:     "advisory failed at plan is non-blocking -> PASS (EL-ADV-001)",
+			name: "advisory failed at plan is non-blocking -> PASS (EL-ADV-001)",
 			policyLog: "── Apply stage (pending): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n" +
 				"── Init stage (passed): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n" +
 				"── Plan stage (passed): passed=0 advisory_failed=1 mandatory_failed=0 errored=0 unknown=0\n",
@@ -32,7 +32,7 @@ func TestClassifyPlanOutcomeFromPolicyLog(t *testing.T) {
 			want:     index.ExpectPass,
 		},
 		{
-			name:     "advisory failed but mandatory passed -> PASS (REG-BIN-009)",
+			name: "advisory failed but mandatory passed -> PASS (REG-BIN-009)",
 			policyLog: "── Init stage (passed): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n" +
 				"── Plan stage (passed): passed=1 advisory_failed=1 mandatory_failed=0 errored=0 unknown=0\n" +
 				"── Apply stage (pending): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n",
@@ -40,7 +40,7 @@ func TestClassifyPlanOutcomeFromPolicyLog(t *testing.T) {
 			want:     index.ExpectPass,
 		},
 		{
-			name:     "unknown at plan -> UNKNOWN (EC-GR-002 / GR-DEP-006 / GR-DEP-008)",
+			name: "unknown at plan -> UNKNOWN (EC-GR-002 / GR-DEP-006 / GR-DEP-008)",
 			policyLog: "── Init stage (passed): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n" +
 				"── Plan stage (passed): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=1\n" +
 				"── Apply stage (pending): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n",
@@ -49,12 +49,12 @@ func TestClassifyPlanOutcomeFromPolicyLog(t *testing.T) {
 		},
 		{
 			name:      "no policy log -> fall back to run status errored -> FAIL",
-			policyLog:  "",
-			planStat:   "errored",
-			want:       index.ExpectFail,
+			policyLog: "",
+			planStat:  "errored",
+			want:      index.ExpectFail,
 		},
 		{
-			name:     "init-stage mandatory failure cancels plan -> FAIL (PP-MOD-002 / REG-BIN-004)",
+			name: "init-stage mandatory failure cancels plan -> FAIL (PP-MOD-002 / REG-BIN-004)",
 			policyLog: "── Apply stage (unreachable): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n" +
 				"── Plan stage (canceled): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n" +
 				"── Init stage (failed): passed=0 advisory_failed=0 mandatory_failed=1 errored=0 unknown=0\n",
@@ -62,14 +62,14 @@ func TestClassifyPlanOutcomeFromPolicyLog(t *testing.T) {
 			want:     index.ExpectFail,
 		},
 		{
-			name:     "init passed, plan passed -> PASS (PP-MOD-001)",
+			name: "init passed, plan passed -> PASS (PP-MOD-001)",
 			policyLog: "── Init stage (passed): passed=1 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n" +
 				"── Plan stage (passed): passed=1 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n",
 			planStat: "planned_and_finished",
 			want:     index.ExpectPass,
 		},
 		{
-			name:     "init unknown but plan passed -> PASS, init does not override (PP-PROV-001/004/005)",
+			name: "init unknown but plan passed -> PASS, init does not override (PP-PROV-001/004/005)",
 			policyLog: "── Init stage (passed): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=1\n" +
 				"── Plan stage (passed): passed=1 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n" +
 				"── Apply stage (passed): passed=1 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n",
@@ -77,7 +77,7 @@ func TestClassifyPlanOutcomeFromPolicyLog(t *testing.T) {
 			want:     index.ExpectPass,
 		},
 		{
-			name:     "init unknown but plan mandatory-failed -> FAIL, plan governs (PP-PROV-002)",
+			name: "init unknown but plan mandatory-failed -> FAIL, plan governs (PP-PROV-002)",
 			policyLog: "── Init stage (passed): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=1\n" +
 				"── Plan stage (failed): passed=0 advisory_failed=0 mandatory_failed=1 errored=0 unknown=0\n" +
 				"── Apply stage (unreachable): passed=0 advisory_failed=0 mandatory_failed=0 errored=0 unknown=0\n",
