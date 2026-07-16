@@ -1,0 +1,157 @@
+name: Cloud Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_id:
+        description: "Optional test ID or comma-separated test IDs. Leave blank to run the full suite."
+        required: false
+        type: string
+      terraform_version:
+        description: "Terraform version for cloud workspaces. Defaults to vars.TERRAFORM_VERSION."
+        required: false
+        type: string
+      org_id:
+        description: "HCP Terraform organization. Defaults to vars.ORG_ID."
+        required: false
+        type: string
+      oauth_token_id:
+        description: "VCS OAuth token ID. Defaults to vars.TFE_OAUTH_TOKEN_ID."
+        required: false
+        type: string
+      host:
+        description: "HCP Terraform host. Defaults to vars.TFE_HOST."
+        required: false
+        type: string
+      vcs_repo:
+        description: "VCS repo owner/name for policy sets. Defaults to vars.VCS_REPO."
+        required: false
+        type: string
+      vcs_branch:
+        description: "VCS branch for policy sets. Defaults to vars.VCS_BRANCH or this workflow branch."
+        required: false
+        type: string
+      no_cleanup:
+        description: "Keep workspaces and policy sets after the run."
+        required: false
+        default: false
+        type: boolean
+
+run-name: >-
+  cloud-runner ${{
+    inputs.test_id != '' && format('({0})', inputs.test_id) || '(full suite)'
+  }}
+
+jobs:
+  cloud-runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: cloud-runner
+
+    env:
+      TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
+      TF_VERSION_INPUT: ${{ inputs.terraform_version }}
+      TF_VERSION_VAR: ${{ vars.TERRAFORM_VERSION }}
+      ORG_INPUT: ${{ inputs.org_id }}
+      ORG_VAR: ${{ vars.ORG_ID }}
+      OAUTH_TOKEN_INPUT: ${{ inputs.oauth_token_id }}
+      OAUTH_TOKEN_VAR: ${{ vars.TFE_OAUTH_TOKEN_ID }}
+      HOST_INPUT: ${{ inputs.host }}
+      HOST_VAR: ${{ vars.TFE_HOST }}
+      VCS_REPO_INPUT: ${{ inputs.vcs_repo }}
+      VCS_REPO_VAR: ${{ vars.VCS_REPO }}
+      VCS_BRANCH_INPUT: ${{ inputs.vcs_branch }}
+      VCS_BRANCH_VAR: ${{ vars.VCS_BRANCH }}
+      TEST_ID_INPUT: ${{ inputs.test_id }}
+      TEST_ID_VAR: ${{ vars.TEST_ID }}
+      NO_CLEANUP: ${{ inputs.no_cleanup }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: cloud-runner/go.mod
+          cache-dependency-path: cloud-runner/go.sum
+
+      - name: Resolve cloud-runner inputs
+        id: config
+        run: |
+          set -euo pipefail
+
+          tf_version="${TF_VERSION_INPUT:-${TF_VERSION_VAR:-}}"
+          org_id="${ORG_INPUT:-${ORG_VAR:-}}"
+          oauth_token_id="${OAUTH_TOKEN_INPUT:-${OAUTH_TOKEN_VAR:-}}"
+          host="${HOST_INPUT:-${HOST_VAR:-}}"
+          vcs_repo="${VCS_REPO_INPUT:-${VCS_REPO_VAR:-}}"
+          vcs_branch="${VCS_BRANCH_INPUT:-${VCS_BRANCH_VAR:-${GITHUB_REF_NAME}}}"
+          test_id="${TEST_ID_INPUT:-${TEST_ID_VAR:-}}"
+
+          missing=()
+          [ -n "${TFE_TOKEN:-}" ] || missing+=("secrets.TFE_TOKEN")
+          [ -n "${tf_version}" ] || missing+=("terraform_version input or vars.TERRAFORM_VERSION")
+          [ -n "${org_id}" ] || missing+=("org_id input or vars.ORG_ID")
+          [ -n "${oauth_token_id}" ] || missing+=("oauth_token_id input or vars.TFE_OAUTH_TOKEN_ID")
+          [ -n "${host}" ] || missing+=("host input or vars.TFE_HOST")
+          [ -n "${vcs_repo}" ] || missing+=("vcs_repo input or vars.VCS_REPO")
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            printf 'Missing required configuration:\n' >&2
+            printf '  - %s\n' "${missing[@]}" >&2
+            exit 1
+          fi
+
+          {
+            echo "tf_version=${tf_version}"
+            echo "org_id=${org_id}"
+            echo "oauth_token_id=${oauth_token_id}"
+            echo "host=${host}"
+            echo "vcs_repo=${vcs_repo}"
+            echo "vcs_branch=${vcs_branch}"
+            echo "test_id=${test_id}"
+          } >> "${GITHUB_OUTPUT}"
+
+          echo "Cloud runner configuration:"
+          echo "  host              : ${host}"
+          echo "  org               : ${org_id}"
+          echo "  terraform_version : ${tf_version}"
+          echo "  oauth_token_id    : ${oauth_token_id}"
+          echo "  vcs_repo          : ${vcs_repo}"
+          echo "  vcs_branch        : ${vcs_branch}"
+          if [ -n "${test_id}" ]; then
+            echo "  test_id           : ${test_id}"
+          else
+            echo "  test_id           : <full suite>"
+          fi
+          echo "  no_cleanup        : ${NO_CLEANUP}"
+
+      - name: Run cloud-runner
+        run: |
+          set -euo pipefail
+
+          args=(
+            --cloud
+            --token "${TFE_TOKEN}"
+            --org "${{ steps.config.outputs.org_id }}"
+            --oauth-token-id "${{ steps.config.outputs.oauth_token_id }}"
+            --host "${{ steps.config.outputs.host }}"
+            --tf-version "${{ steps.config.outputs.tf_version }}"
+            --vcs-repo "${{ steps.config.outputs.vcs_repo }}"
+            --vcs-branch "${{ steps.config.outputs.vcs_branch }}"
+          )
+
+          if [ -n "${{ steps.config.outputs.test_id }}" ]; then
+            args+=(--test-id "${{ steps.config.outputs.test_id }}")
+          fi
+
+          if [ "${NO_CLEANUP}" = "true" ]; then
+            args+=(--no-cleanup)
+          fi
+
+          go run . "${args[@]}"
