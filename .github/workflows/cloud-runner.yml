@@ -50,7 +50,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: cloud-runner
 
     env:
       TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
@@ -82,6 +81,7 @@ jobs:
 
       - name: Resolve cloud-runner inputs
         id: config
+        working-directory: cloud-runner
         run: |
           set -euo pipefail
 
@@ -131,6 +131,11 @@ jobs:
           fi
           echo "  no_cleanup        : ${NO_CLEANUP}"
 
+      - name: Build cloud-runner
+        run: |
+          set -euo pipefail
+          go build -C cloud-runner -o ../cloud-runner-bin .
+
       - name: Run cloud-runner
         run: |
           set -euo pipefail
@@ -154,4 +159,4 @@ jobs:
             args+=(--no-cleanup)
           fi
 
-          go run . "${args[@]}"
+          ./cloud-runner-bin "${args[@]}"
