@@ -75,7 +75,7 @@ func (c *recordingCloudClient) DeletePolicySet(_ context.Context, _ string) erro
 
 func TestRunCleanupDeletesPolicySetWithWorkspaceCleanup(t *testing.T) {
 	client := &recordingCloudClient{}
-	cfg := &config.Config{Cleanup: true, TFPolicyBin: "tfpcli"}
+	cfg := &config.Config{Cleanup: true, TFPolicyBin: "tfpolicy"}
 	r := newRunner(client, cfg, "project-1", "")
 	r.local = &localrun.Runner{}
 
@@ -100,7 +100,7 @@ func TestRunCleanupDeletesPolicySetWithWorkspaceCleanup(t *testing.T) {
 
 func TestRunNoCleanupKeepsPolicySetAndWorkspace(t *testing.T) {
 	client := &recordingCloudClient{}
-	cfg := &config.Config{Cleanup: false, TFPolicyBin: "tfpcli"}
+	cfg := &config.Config{Cleanup: false, TFPolicyBin: "tfpolicy"}
 	r := newRunner(client, cfg, "project-1", "")
 	r.local = &localrun.Runner{}
 

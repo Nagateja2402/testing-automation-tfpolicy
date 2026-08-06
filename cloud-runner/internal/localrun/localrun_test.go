@@ -74,12 +74,12 @@ func TestRunnerRunPolicyTest_builds_and_cleans_case_plugin_when_plugin_source_ex
 	if err := os.WriteFile(goStub, []byte(goStubContent), 0o755); err != nil {
 		t.Fatalf("write go stub: %v", err)
 	}
-	tfpcliStub := filepath.Join(binDir, "tfpcli")
-	if err := os.WriteFile(tfpcliStub, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
-		t.Fatalf("write tfpcli stub: %v", err)
+	tfpolicyStub := filepath.Join(binDir, "tfpolicy")
+	if err := os.WriteFile(tfpolicyStub, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatalf("write tfpolicy stub: %v", err)
 	}
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	runner := New(&config.Config{TFPolicyBin: tfpcliStub}, t.TempDir())
+	runner := New(&config.Config{TFPolicyBin: tfpolicyStub}, t.TempDir())
 	tc := testcase.TestCase{ID: "plugin-case", Dir: caseDir, ExpectPolicyTest: index.ExpectPass}
 
 	// When

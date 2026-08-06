@@ -69,8 +69,8 @@ jobs:
           url="https://releases.hashicorp.com/tfpolicy/${latest_version}/${archive}"
           curl --fail --location --show-error --silent --output "${RUNNER_TEMP}/${archive}" "${url}"
           unzip -q "${RUNNER_TEMP}/${archive}" -d "${RUNNER_TEMP}/tfpolicy"
-          sudo install -m 0755 "${RUNNER_TEMP}/tfpolicy/tfpolicy" /usr/local/bin/tfpcli
-          tfpcli version
+          sudo install -m 0755 "${RUNNER_TEMP}/tfpolicy/tfpolicy" /usr/local/bin/tfpolicy
+          tfpolicy version
 
       - name: Resolve cloud-runner inputs
         id: config

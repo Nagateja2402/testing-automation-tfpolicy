@@ -31,7 +31,7 @@ const (
 	PolicyPrefix          = "regtest-pol-"
 
 	// Local mode binary defaults.
-	DefaultTFPolicyBin = "tfpcli"
+	DefaultTFPolicyBin = "tfpolicy"
 	DefaultTFPBin      = "tfp"
 )
 
