@@ -56,9 +56,6 @@ func (c *Client) LookupProjectID(ctx context.Context) (string, error) {
 // Workspace
 // ---------------------------------------------------------------------------
 
-// CreateWorkspace creates an API-driven workspace with the policy TF version.
-// If the requested version is not available on the instance, it falls back to
-// config.FallbackTFVersion automatically.
 func (c *Client) CreateWorkspace(ctx context.Context, name, projectID string) (string, error) {
 	tfVer := c.cfg.TFVersion
 	ws, err := c.tfe.Workspaces.Create(ctx, c.cfg.Org, tfe.WorkspaceCreateOptions{
@@ -71,20 +68,23 @@ func (c *Client) CreateWorkspace(ctx context.Context, name, projectID string) (s
 		},
 	})
 	if err != nil {
-		// If the requested TF version is not available, fall back.
-		if isTFVersionError(err) && tfVer != config.FallbackTFVersion {
-			fmt.Printf("  [WARN] TF version %s not available, falling back to %s\n",
-				tfVer, config.FallbackTFVersion)
-			ws, err = c.tfe.Workspaces.Create(ctx, c.cfg.Org, tfe.WorkspaceCreateOptions{
-				Name:             tfe.String(name),
-				ExecutionMode:    tfe.String("remote"),
-				TerraformVersion: tfe.String(config.FallbackTFVersion),
-				AutoApply:        tfe.Bool(false),
-				Project: &tfe.Project{
-					ID: projectID,
-				},
-			})
+		if !isTFVersionError(err) {
+			return "", fmt.Errorf("creating workspace %s: %w", name, err)
 		}
+		alphaVer, resolveErr := c.resolveAlphaTFVersion(ctx)
+		if resolveErr != nil {
+			return "", fmt.Errorf("creating workspace %s: version %s unavailable and alpha lookup failed: %w", name, tfVer, resolveErr)
+		}
+		fmt.Printf("  [WARN] TF version %s not available, falling back to latest alpha: %s\n", tfVer, alphaVer)
+		ws, err = c.tfe.Workspaces.Create(ctx, c.cfg.Org, tfe.WorkspaceCreateOptions{
+			Name:             tfe.String(name),
+			ExecutionMode:    tfe.String("remote"),
+			TerraformVersion: tfe.String(alphaVer),
+			AutoApply:        tfe.Bool(false),
+			Project: &tfe.Project{
+				ID: projectID,
+			},
+		})
 		if err != nil {
 			return "", fmt.Errorf("creating workspace %s: %w", name, err)
 		}
@@ -92,9 +92,77 @@ func (c *Client) CreateWorkspace(ctx context.Context, name, projectID string) (s
 	return ws.ID, nil
 }
 
-// isTFVersionError returns true when the error is a 422 about an invalid TF version.
 func isTFVersionError(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "does not resolve to a version")
+}
+
+// resolveAlphaTFVersion queries the admin terraform-versions endpoint and
+// returns the version string of the newest enabled alpha build available on
+// the instance.  Alpha builds are identified by "alpha" in the version string.
+func (c *Client) resolveAlphaTFVersion(ctx context.Context) (string, error) {
+	type tfVersion struct {
+		Version string `json:"version"`
+		Enabled bool   `json:"enabled"`
+	}
+	type responseDoc struct {
+		Data []struct {
+			Attributes tfVersion `json:"attributes"`
+		} `json:"data"`
+		Links struct {
+			Next interface{} `json:"next"`
+		} `json:"links"`
+	}
+
+	apiBase := fmt.Sprintf("https://%s/api/v2/admin/terraform-versions", c.cfg.Host)
+	var best string
+
+	pageURL := apiBase + "?page[size]=100"
+	for pageURL != "" {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, pageURL, nil)
+		if err != nil {
+			return "", fmt.Errorf("building admin terraform-versions request: %w", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+c.cfg.Token)
+		req.Header.Set("Content-Type", "application/vnd.api+json")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return "", fmt.Errorf("listing terraform versions: %w", err)
+		}
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return "", fmt.Errorf("listing terraform versions: HTTP %d: %s", resp.StatusCode, string(body))
+		}
+
+		var doc responseDoc
+		if err := json.Unmarshal(body, &doc); err != nil {
+			return "", fmt.Errorf("parsing terraform versions response: %w", err)
+		}
+
+		for _, item := range doc.Data {
+			v := item.Attributes
+			if !v.Enabled || !strings.Contains(v.Version, "alpha") {
+				continue
+			}
+			if best == "" || v.Version > best {
+				best = v.Version
+			}
+		}
+
+		pageURL = ""
+		if doc.Links.Next != nil {
+			if next, ok := doc.Links.Next.(string); ok && next != "" {
+				pageURL = next
+			}
+		}
+	}
+
+	if best == "" {
+		return "", fmt.Errorf("no enabled alpha Terraform version found on %s", c.cfg.Host)
+	}
+	return best, nil
 }
 
 // DeleteWorkspace removes the workspace by ID.

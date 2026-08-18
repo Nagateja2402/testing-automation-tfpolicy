@@ -38,7 +38,7 @@ Flags:
   --org           TFE organization name (env: TFE_ORG)
   --host          TFE host (default: app.staging.terraform.io)
   --project       TFE project name (default: regression-testing)
-  --tf-version    Terraform version for workspaces (default: 1.15.0-policy20261106)
+  --tf-version    Terraform version for workspaces (default: 1.16.0-alpha20260626); falls back to latest available alpha if not present
   --no-cleanup    Keep workspaces and policy sets after run (also prints run-id per test) (default: cleanup)
   --timeout       Per-run timeout in minutes (default: 20)
   --purge         Delete all regtest workspaces and policy sets then exit

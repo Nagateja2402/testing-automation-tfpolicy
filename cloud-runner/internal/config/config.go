@@ -19,11 +19,10 @@ const (
 	DefaultVCSRepo = "Nagateja2402/testing-automation-tfpolicy"
 	// DefaultVCSBranch is the branch to ingest policies from.
 	DefaultVCSBranch = "main"
-	// DefaultTFVersion is the preferred policy-enabled Terraform version.
-	// If the HCP Terraform instance does not yet carry this build, the client
-	// will fall back to FallbackTFVersion automatically.
-	DefaultTFVersion      = "1.16.0-alpha20260626"
-	FallbackTFVersion     = "1.15.0-policy20261002"
+	// DefaultTFVersion is the preferred Terraform version for cloud workspaces.
+	// If the HCP Terraform instance does not carry this build, the client will
+	// automatically fall back to the latest available alpha version.
+	DefaultTFVersion = "1.16.0-alpha20260626"
 	DefaultParallel       = 5
 	DefaultRunTimeoutMins = 20
 	WorkspacePrefix       = "regtest-"
