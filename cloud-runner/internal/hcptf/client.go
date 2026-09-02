@@ -583,7 +583,7 @@ func (c *Client) TriggerRun(ctx context.Context, wsID, cvID string, applyIfAllow
 		Message: tfe.String("cloud-runner regression test"),
 		Workspace: &tfe.Workspace{ID: wsID},
 		ConfigurationVersion: &tfe.ConfigurationVersion{ID: cvID},
-		AutoApply: tfe.Bool(false),
+		AutoApply: tfe.Bool(true),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("creating run: %w", err)
@@ -626,13 +626,25 @@ func (c *Client) TriggerRun(ctx context.Context, wsID, cvID string, applyIfAllow
 		return result, nil
 	}
 
-	// If plan passed and caller wants apply, confirm it.
-	if applyIfAllowed && isPlanPassedStatus(planStatus) {
-		if err := c.tfe.Runs.Apply(ctx, run.ID, tfe.RunApplyOptions{
-			Comment: tfe.String("cloud-runner auto-apply"),
-		}); err != nil {
-			result.Err = fmt.Errorf("confirming apply: %w", err)
-			return result, nil
+	// If plan passed and caller wants apply, wait for apply to complete.
+	// With AutoApply: true, the run automatically proceeds to apply after plan
+	// succeeds, so we skip manual confirmation and go straight to waiting.
+	if applyIfAllowed && (isPlanPassedStatus(planStatus) || isApplyInProgress(planStatus)) {
+		// Only manually confirm if the run is still waiting for confirmation.
+		// When AutoApply is enabled, the run auto-transitions to apply states,
+		// so we skip the manual Apply call.
+		if isPlanPassedStatus(planStatus) && !isApplyInProgress(planStatus) {
+			fmt.Printf("  [INFO] Run %s at status %s - manually confirming apply\n", run.ID, planStatus)
+			if err := c.tfe.Runs.Apply(ctx, run.ID, tfe.RunApplyOptions{
+				Comment: tfe.String("cloud-runner auto-apply"),
+			}); err != nil {
+				fmt.Printf("  [ERROR] Failed to confirm apply for run %s: %v\n", run.ID, err)
+				result.Err = fmt.Errorf("confirming apply: %w", err)
+				return result, nil
+			}
+			fmt.Printf("  [INFO] Apply confirmed successfully for run %s\n", run.ID)
+		} else if isApplyInProgress(planStatus) {
+			fmt.Printf("  [INFO] Run %s already in apply state (%s) - skipping manual confirmation\n", run.ID, planStatus)
 		}
 
 		// Wait for apply-terminal state.
@@ -737,6 +749,16 @@ func isPlanPassedStatus(status string) bool {
 		tfe.RunPolicyChecked,
 		tfe.RunPolicyOverride,
 		tfe.RunPlannedAndFinished:
+		return true
+	}
+	return false
+}
+
+func isApplyInProgress(status string) bool {
+	switch tfe.RunStatus(status) {
+	case tfe.RunApplyQueued,
+		tfe.RunApplying,
+		tfe.RunApplied:
 		return true
 	}
 	return false

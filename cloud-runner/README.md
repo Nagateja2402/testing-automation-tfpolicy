@@ -19,8 +19,21 @@
   - A project named `regression-testing` inside that org
   - A VCS (GitHub) OAuth connection configured in the org
   - AWS credentials configured as a variable set on the `regression-testing` project
+  - **CRITICAL**: API token with "apply runs" permission (see Token Requirements below)
 - A GitHub repo containing the policy files, organized as `<TEST-ID>/<policy-file>.policy.hcl`
   (default: `Nagateja2402/tfpolicy-regression-tests`, branch `main`)
+
+### Token Requirements
+
+For auto-apply to work, the API token (`TFE_TOKEN`) must have permission to apply runs on workspaces. This requires either:
+
+1. **User token** (recommended for testing): Use your personal API token from **User Settings → Tokens**
+2. **Team token**: Create a team with "Apply" permission on the `regression-testing` project:
+   - Go to **Projects → regression-testing → Settings → Team Access**
+   - Add a team with **"Apply"** or **"Admin"** workspace access
+   - Generate a team API token from **Settings → Teams → [Team Name] → Team API Token**
+
+**Note**: Organization tokens CANNOT be used as they lack permission to create runs and apply.
 
 ---
 
@@ -159,9 +172,17 @@ the variable set on HCP Terraform.
 
 ## Troubleshooting
 
+**Runs stuck at "Needs Confirmation" / auto-apply not working**
+The API token lacks "apply runs" permission. This happens when:
+- Using an organization token (which can't apply runs)
+- Using a team token where the team doesn't have "Apply" permission on the workspace/project
+- Using a user token from a user without apply permission
+
+**Fix**: Use a user token or ensure the team token's team has "Apply" or "Admin" permission on the `regression-testing` project. See "Token Requirements" in Prerequisites.
+
 **`TF version X not available, falling back to Y`**
 The requested `--tf-version` is not yet available on the target HCP Terraform instance.
-The runner falls back to `1.15.0-policy20261002` automatically.
+The runner falls back to the latest alpha automatically.
 
 **Plan errors with `ExpiredToken`**
 AWS session credentials in the `aws-creds` variable set have expired. Update them in the
