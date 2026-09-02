@@ -62,7 +62,7 @@ func (c *Client) CreateWorkspace(ctx context.Context, name, projectID string) (s
 		Name:             tfe.String(name),
 		ExecutionMode:    tfe.String("remote"),
 		TerraformVersion: tfe.String(tfVer),
-		AutoApply:        tfe.Bool(false),
+		AutoApply:        tfe.Bool(true),
 		Project: &tfe.Project{
 			ID: projectID,
 		},
@@ -80,7 +80,7 @@ func (c *Client) CreateWorkspace(ctx context.Context, name, projectID string) (s
 			Name:             tfe.String(name),
 			ExecutionMode:    tfe.String("remote"),
 			TerraformVersion: tfe.String(alphaVer),
-			AutoApply:        tfe.Bool(false),
+			AutoApply:        tfe.Bool(true),
 			Project: &tfe.Project{
 				ID: projectID,
 			},
