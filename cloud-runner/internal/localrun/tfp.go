@@ -58,14 +58,36 @@ func (r *Runner) runTFPApply(ctx context.Context, tc testcase.TestCase) PhaseRes
 	r.writeLog(tc.ID, "tfp_apply", out)
 	result := checkResult(tc.ExpectApply, ec, out, "tfp apply")
 
+	restorePolicy := disablePolicyFiles(tc.Dir)
 	destroyArgs := []string{"destroy", "-auto-approve", "-input=false", "-no-color"}
 	destroyOut, dec := r.run(ctx, r.cfg.TFPBin, destroyArgs, tc.Dir)
+	restorePolicy()
 	r.writeLog(tc.ID, "tfp_destroy", destroyOut)
 	if dec != 0 {
 		result.Note += fmt.Sprintf(" [destroy failed: exit %d — check tfp_destroy.log]", dec)
 	}
 	r.cleanTFWorkdir(tc.Dir, tc.ID)
 	return result
+}
+
+// disablePolicyFiles renames every *.policy.hcl in dir out of the way so the
+// cleanup destroy run below isn't itself evaluated (and potentially denied)
+// by the test fixture's own policy — several fixtures deliberately deny or
+// error on delete/update operations. Returns a restore func to call after.
+func disablePolicyFiles(dir string) func() {
+	matches, _ := filepath.Glob(filepath.Join(dir, "*.policy.hcl"))
+	renamed := make(map[string]string, len(matches))
+	for _, m := range matches {
+		disabled := m + ".disabled"
+		if err := os.Rename(m, disabled); err == nil {
+			renamed[m] = disabled
+		}
+	}
+	return func() {
+		for original, disabled := range renamed {
+			_ = os.Rename(disabled, original)
+		}
+	}
 }
 
 func (r *Runner) runInit(ctx context.Context, tc testcase.TestCase) (string, int) {

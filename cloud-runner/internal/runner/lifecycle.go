@@ -141,6 +141,19 @@ func (r *Runner) Run(ctx context.Context, tc testcase.TestCase) *TestResult {
 			result.Apply.Note += " [WARNING: apply errored — resources created before the failure may not be in Terraform state and will NOT be destroyed by the destroy run; delete them manually (e.g. CloudWatch log groups, S3 buckets)]"
 		}
 		destroyCtx := context.Background()
+		// Detach the test's own policy set BEFORE triggering the cleanup destroy run.
+		// Many test fixtures intentionally install policies that deny/error on delete
+		// or update operations (OP-DEL/OP-ERR/OP-INF suites); if the policy set is
+		// still attached, the destroy run itself gets blocked by the very policy it
+		// was created to exercise, leaving the AWS resources (e.g. S3 buckets) orphaned.
+		if psID != "" {
+			if e := r.client.DeletePolicySet(destroyCtx, psID); e != nil {
+				result.Apply.Note += fmt.Sprintf(" [pre-destroy policy set cleanup warning: %v]", e)
+			} else {
+				// Prevent the deferred cleanup from attempting to delete it again.
+				psID = ""
+			}
+		}
 		if e := r.client.TriggerDestroyRun(destroyCtx, wsID); e != nil {
 			result.Apply.Note += fmt.Sprintf(" [destroy warning: %v]", e)
 		}
