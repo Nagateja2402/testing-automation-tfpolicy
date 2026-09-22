@@ -1,8 +1,14 @@
 # Copyright (c) HashiCorp, Inc.
 # REG-BIN-005: Module policy unaffected by binary change.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 module_policy "*" "must_use_approved_source" {
   locals {
     approved_sources = ["./modules/vpc", "./modules/s3"]

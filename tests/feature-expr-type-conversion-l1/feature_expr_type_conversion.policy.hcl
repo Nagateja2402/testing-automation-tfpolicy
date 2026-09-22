@@ -5,6 +5,15 @@
 # Covers : implicit cty type coercion (string <-> number)
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_instance" "feature_expr_type_conversion" {
   # `ipv6_address_count` is a real numeric attribute on aws_instance (the
   # earlier draft used cpu_count which doesn't exist in the AWS provider

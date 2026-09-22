@@ -11,6 +11,15 @@ input "required_prefix" {
   default = "default-prefix-"  # intentionally NOT the value the test asserts
 }
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_test_inputs_block" {
   enforcement_level = "advisory"
   enforce {

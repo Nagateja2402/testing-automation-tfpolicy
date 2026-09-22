@@ -20,6 +20,6 @@ resource "aws_s3_bucket" "uppercase_name_fails" {
 resource "aws_s3_bucket" "empty_name_fails" {
   expect_failure = true
   attrs = {
-    force_destory = false
+    force_destroy = false
   }
 }

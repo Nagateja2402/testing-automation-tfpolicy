@@ -2,8 +2,14 @@
 # TF-E2E-003: Full lifecycle — plan with getresources unknown then apply resolves.
 # Same as GR-DEP-001 but as end-to-end framing.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_vpc" "must_have_flow_log" {
   locals {
     flow_logs = core::getresources("aws_flow_log", {

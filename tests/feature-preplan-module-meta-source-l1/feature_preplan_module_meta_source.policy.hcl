@@ -11,6 +11,15 @@ input "approved_module_prefixes" {
   default = ["./modules/", "registry.terraform.io/"]
 }
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 module_policy "*" "feature_preplan_module_meta_source" {
   locals {
     source = core::try(meta.source, "")

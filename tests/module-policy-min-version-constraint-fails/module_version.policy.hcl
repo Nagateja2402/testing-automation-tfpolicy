@@ -2,8 +2,14 @@
 # Minimum required module version: major version must be 2 or higher.
 # Checks that version is non-empty and does not start with "0." or "1.".
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 module_policy "*" "must_meet_minimum_version" {
   locals {
     version = core::try(meta.version, "")

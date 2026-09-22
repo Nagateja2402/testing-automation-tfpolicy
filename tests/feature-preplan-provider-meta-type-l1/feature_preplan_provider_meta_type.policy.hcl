@@ -13,6 +13,15 @@ input "allowed_provider_types" {
   default = ["aws", "random"]
 }
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 provider_policy "*" "feature_preplan_provider_meta_type" {
   enforce {
     condition     = core::contains(input.allowed_provider_types, core::try(meta.type, ""))

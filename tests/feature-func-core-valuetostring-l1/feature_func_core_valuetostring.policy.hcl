@@ -8,6 +8,15 @@
 #          inside info_message or error_message for debugging.
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "require_encryption_config_cross_check_valuetostring" {
   enforcement_level = "advisory"
   locals {

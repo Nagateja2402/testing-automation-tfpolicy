@@ -1,7 +1,13 @@
 # Copyright (c) HashiCorp, Inc.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_iam_policy" "no_full_admin_privileges" {
   locals {
     policy_doc = core::jsondecode(attrs.policy)

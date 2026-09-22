@@ -11,6 +11,15 @@ input "secret" {
   sensitive = true
 }
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_input_sensitive" {
   enforce {
     condition    = input.secret != ""

@@ -11,6 +11,6 @@ resource "aws_s3_bucket" "non_prod_filter_false_skips_enforce" {
     tags = {
       Environment = "dev"
     }
-    versioning_enabled = false
+    versioning = [{ enabled = false }]
   }
 }

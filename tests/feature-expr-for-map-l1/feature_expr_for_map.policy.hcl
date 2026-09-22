@@ -5,6 +5,15 @@
 # Covers : for-expression producing a map
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_instance" "feature_expr_for_map" {
   locals {
     tag_map = { for k, v in core::try(attrs.tags, {}) : k => v if v != "" }

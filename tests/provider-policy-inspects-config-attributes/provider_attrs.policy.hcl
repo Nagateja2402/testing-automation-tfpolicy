@@ -3,8 +3,14 @@
 # which is not allowed at the setup evaluation stage. Expected to cause
 # a validation/compile error when evaluated.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 provider_policy "aws" "invalid_attrs_in_provider_policy" {
   enforce {
     condition     = core::try(attrs.region, "") == "us-east-1"

@@ -1,8 +1,14 @@
 # Copyright (c) HashiCorp, Inc.
 # EC-GR-005: getresources inside for expression in locals.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_vpc" "flow_log_traffic_types" {
   locals {
     flow_logs     = core::getresources("aws_flow_log", { vpc_id = attrs.id })

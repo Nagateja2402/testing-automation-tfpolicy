@@ -1,7 +1,13 @@
 # Copyright (c) HashiCorp, Inc.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_s3_bucket" "must_have_web_sg_in_vpc" {
   locals {
     matching_sgs = core::getresources("aws_security_group", {

@@ -2,8 +2,14 @@
 # This policy is valid. The error is in the policytest file:
 # prior_attrs used without declaring operations (which would exclude "create").
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_s3_bucket" "immutable_bucket_name" {
   operations = ["update", "delete"]
 

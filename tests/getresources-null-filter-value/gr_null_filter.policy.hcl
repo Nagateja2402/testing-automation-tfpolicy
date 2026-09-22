@@ -1,8 +1,14 @@
 # Copyright (c) HashiCorp, Inc.
 # EC-GR-003: getresources with null filter attribute value.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_vpc" "filter_with_null_value" {
   locals {
     # attrs.owner_id may be null; using it as a filter value with null.

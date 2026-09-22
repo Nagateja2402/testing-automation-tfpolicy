@@ -59,7 +59,7 @@ resource "aws_security_group" "pass_cidr_check" {
   attrs = {
     name    = "regression-sg"
     ingress = [
-      { cidr = plugin::sample::echo("10.0.0.0/8") },
+      { cidr_blocks = [plugin::sample::echo("10.0.0.0/8")] },
     ]
   }
   meta = { provider_type = "aws" }

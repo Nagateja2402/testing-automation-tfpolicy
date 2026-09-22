@@ -10,6 +10,15 @@ input "must_be_set" {
   default = "fallback"
 }
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_result_error" {
   enforce {
     condition     = input.must_be_set != ""

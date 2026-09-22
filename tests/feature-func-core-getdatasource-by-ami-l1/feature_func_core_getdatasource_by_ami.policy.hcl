@@ -6,6 +6,15 @@
 #          own ami id) to resolve the backing aws_ami data source
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_instance" "feature_func_core_getdatasource_by_ami" {
   # Resolve the aws_ami data source backing this instance by filtering on the
   # instance's own `ami` attribute, then enforce a property on the resolved

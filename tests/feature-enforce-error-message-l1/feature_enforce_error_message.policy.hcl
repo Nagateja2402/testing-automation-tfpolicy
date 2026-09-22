@@ -5,6 +5,15 @@
 # Covers : error_message rendered on failed condition
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_enforce_error_message" {
   enforce {
     condition     = core::try(attrs.bucket, "") != ""

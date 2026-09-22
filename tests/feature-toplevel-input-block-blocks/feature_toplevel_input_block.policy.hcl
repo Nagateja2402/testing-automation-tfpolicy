@@ -10,6 +10,15 @@ input "min_length" {
   default = 3
 }
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "toplevel_input_block" {
   enforce {
     condition     = core::length(core::regexall("^.{${input.min_length},}$", core::try(attrs.bucket, ""))) > 0

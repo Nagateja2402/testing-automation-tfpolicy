@@ -11,6 +11,6 @@ resource "aws_s3_bucket" "prod_filter_true_enforce_fails" {
     tags = {
       Environment = "production"
     }
-    versioning_enabled = false
+    versioning = [{ enabled = false }]
   }
 }

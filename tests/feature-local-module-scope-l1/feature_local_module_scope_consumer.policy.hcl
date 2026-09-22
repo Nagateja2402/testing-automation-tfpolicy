@@ -9,6 +9,15 @@
 #          local.module_allowed_regions  (defined in the definer file)
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_local_module_scope_prefix" {
   enforcement_level = "advisory"
   locals {

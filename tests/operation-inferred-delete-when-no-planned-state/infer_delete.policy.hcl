@@ -1,8 +1,14 @@
 # Copyright (c) HashiCorp, Inc.
 # Tests that when only prior_attrs is provided, operation is inferred as "delete".
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_s3_bucket" "delete_requires_approval_tag" {
   operations = ["delete"]
 

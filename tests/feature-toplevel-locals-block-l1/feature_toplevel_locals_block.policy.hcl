@@ -9,6 +9,15 @@ locals {
   required_prefix = "prod-"
 }
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "toplevel_locals_block" {
   enforce {
     condition     = plugin::sample::trim(core::try(attrs.bucket, ""), local.required_prefix) != core::try(attrs.bucket, "")

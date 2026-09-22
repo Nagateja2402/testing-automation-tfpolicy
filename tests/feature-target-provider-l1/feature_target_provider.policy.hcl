@@ -5,6 +5,15 @@
 # Covers : provider_policy targets a provider block
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 provider_policy "aws" "feature_target_provider" {
   enforce {
     condition    = meta.type == "aws"

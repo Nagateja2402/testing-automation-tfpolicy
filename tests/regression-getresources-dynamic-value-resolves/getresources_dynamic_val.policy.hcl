@@ -2,8 +2,14 @@
 # REG-BIN-006: getresources with DynamicVal during validate — no panic.
 # Exercises the fix that prevents panics when attrs contain DynamicVal.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_vpc" "must_have_flow_log" {
   locals {
     flow_logs = core::getresources("aws_flow_log", {

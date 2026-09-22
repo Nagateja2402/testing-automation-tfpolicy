@@ -8,6 +8,6 @@ resource "aws_s3_bucket" "mandatory_blocks_when_versioning_missing" {
   expect_failure = true
   attrs = {
     bucket             = "my-bucket"
-    versioning_enabled = false
+    versioning = [{ enabled = false }]
   }
 }

@@ -1,8 +1,14 @@
 # Copyright (c) HashiCorp, Inc.
 # TF-E2E-002: Full lifecycle — create blocked by mandatory policy.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_vpc" "must_have_environment_tag" {
   enforce {
     condition     = core::try(attrs.tags.Environment, "") != ""

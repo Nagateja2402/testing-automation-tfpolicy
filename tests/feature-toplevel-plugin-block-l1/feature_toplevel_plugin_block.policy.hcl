@@ -6,6 +6,12 @@
 # =============================================================================
 
 policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
   plugins {
     sample = {
       source = "./plugin/plugin_binary"

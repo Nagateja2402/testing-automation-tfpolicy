@@ -15,6 +15,15 @@
 # core::getresources() lookups against the sibling type. Uses the real AWS
 # provider resource `aws_s3_bucket_metadata_configuration` so the rule fires
 # under both unit tests AND real `terraform plan`.
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_test_cross_resource_reference" {
   locals {
     bucket = core::try(attrs.bucket, "")

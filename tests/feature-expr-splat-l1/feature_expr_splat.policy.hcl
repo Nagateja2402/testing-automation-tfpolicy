@@ -5,6 +5,15 @@
 # Covers : splat expression extracts a field across a list
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_security_group" "feature_expr_splat" {
   locals {
     ports = core::try(attrs.ingress[*].from_port, [])

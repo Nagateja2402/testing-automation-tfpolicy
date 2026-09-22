@@ -1,7 +1,13 @@
 # Copyright (c) HashiCorp, Inc.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 provider_policy "aws" "region_must_be_allowed" {
   locals {
     allowed_regions = ["us-east-1", "us-west-2", "eu-west-1"]

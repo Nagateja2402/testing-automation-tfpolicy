@@ -10,7 +10,7 @@ resource "aws_s3_bucket" "advisory_failure_expect_true" {
   expect_failure = true
   attrs = {
     bucket             = "my-bucket"
-    versioning_enabled = false
+    versioning = [{ enabled = false }]
     tags = {
       Environment = "dev"
     }
@@ -22,7 +22,7 @@ resource "aws_s3_bucket" "mandatory_failure_blocks" {
   expect_failure = true
   attrs = {
     bucket             = "my-bucket"
-    versioning_enabled = true
+    versioning = [{ enabled = true }]
     tags               = {}
   }
 }

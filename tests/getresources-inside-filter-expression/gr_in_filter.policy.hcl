@@ -1,8 +1,14 @@
 # Copyright (c) HashiCorp, Inc.
 # EC-GR-001: getresources called inside filter expression.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_vpc" "filter_on_getresources" {
   filter = core::length(core::getresources("aws_flow_log", { vpc_id = attrs.id })) > 0
 

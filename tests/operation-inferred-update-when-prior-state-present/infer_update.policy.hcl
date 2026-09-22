@@ -1,8 +1,14 @@
 # Copyright (c) HashiCorp, Inc.
 # Tests that when both attrs and prior_attrs are provided, operation is inferred as "update".
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_s3_bucket" "immutable_bucket_name" {
   operations = ["update"]
 

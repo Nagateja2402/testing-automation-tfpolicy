@@ -5,6 +5,15 @@
 # Covers : prior_attrs populated on delete
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_state_prior_attrs_on_delete" {
   operations = ["delete"]
   enforce {

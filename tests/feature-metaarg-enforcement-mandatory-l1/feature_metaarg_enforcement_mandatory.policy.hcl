@@ -5,6 +5,15 @@
 # Covers : enforcement_level = mandatory produces hard failure
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_metaarg_enforcement_mandatory" {
   enforcement_level = "mandatory"
   enforce {

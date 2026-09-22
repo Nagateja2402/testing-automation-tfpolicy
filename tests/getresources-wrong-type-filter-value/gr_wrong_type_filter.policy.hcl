@@ -2,8 +2,14 @@
 # EC-GR-004: getresources with wrong type for filter value.
 # Filter value is a number instead of a string — type mismatch behavior.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_vpc" "filter_wrong_type" {
   locals {
     # vpc_id is a string, but we pass a number — tests type coercion / error handling.

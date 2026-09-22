@@ -2,8 +2,14 @@
 # Policy targets only the "aws" provider type.
 # A "google" or "azurerm" provider should not be evaluated by this policy.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 provider_policy "aws" "must_use_approved_region" {
   locals {
     approved_regions = ["us-east-1", "us-west-2"]

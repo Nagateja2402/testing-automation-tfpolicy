@@ -20,6 +20,15 @@ input "blocked_regions" {
   default = ["ap-southeast-1"]
 }
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_test_input_varfile_region" {
   locals {
     region = core::try(attrs.region, "us-east-1")

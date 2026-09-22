@@ -5,6 +5,15 @@
 # Covers : local.<name> reads policy-scoped locals
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_expr_local_reference" {
   locals {
     bucket = core::try(attrs.bucket, "")

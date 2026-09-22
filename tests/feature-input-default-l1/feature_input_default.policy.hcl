@@ -10,6 +10,15 @@ input "with_default" {
   default = "fallback"
 }
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_input_default" {
   enforce {
     condition    = input.with_default == "fallback"

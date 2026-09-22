@@ -8,6 +8,6 @@ resource "aws_s3_bucket" "mandatory_deny_blocks_run" {
   expect_failure = true
   attrs = {
     bucket             = "my-bucket"
-    versioning_enabled = false
+    versioning = [{ enabled = false }]
   }
 }

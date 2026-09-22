@@ -1,7 +1,13 @@
 # Copyright (c) HashiCorp, Inc.
 
-policy {}
-
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
 resource_policy "aws_cloudtrail" "ensure_private_s3_bucket" {
   locals {
     matching_buckets = core::getresources("aws_s3_bucket", {

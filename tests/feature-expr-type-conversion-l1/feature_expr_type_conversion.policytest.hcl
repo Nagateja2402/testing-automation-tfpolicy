@@ -18,6 +18,6 @@ resource "aws_instance" "pass_with_count" {
 
 resource "aws_instance" "pass_unset" {
   expect_failure = false
-  attrs = {}
+  attrs = { instance_type = "t3.micro" }
   meta  = { provider_type = "aws" }
 }

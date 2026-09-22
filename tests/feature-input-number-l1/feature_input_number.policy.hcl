@@ -10,6 +10,15 @@ input "sample_number" {
   default = 3
 }
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_s3_bucket" "feature_input_number" {
   enforce {
     condition    = input.sample_number > 0

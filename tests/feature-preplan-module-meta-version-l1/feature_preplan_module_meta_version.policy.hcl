@@ -5,6 +5,15 @@
 # Covers : pre-plan-safe contract — module version pinning from meta only.
 # =============================================================================
 
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
 module_policy "./modules/*" "feature_preplan_module_meta_version" {
   # Local modules legitimately have no version, so skip the constraint when
   # meta.version is unset/empty. The rule fires only on versioned modules.

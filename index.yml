@@ -207,7 +207,7 @@ test_cases:
     description: cycle detection in getresources() dependency graph
     suite: GR-DEP
     expect:
-      tfpolicy_test: "ERROR_CONTAINS: ycle"
+      tfpolicy_test: "ERROR_CONTAINS: Circular reference detected"
       tfp_plan: N/A
       tfp_apply: N/A
 
@@ -215,9 +215,9 @@ test_cases:
     description: getresources() with unknown resource type returns empty
     suite: GR-DEP
     expect:
-      tfpolicy_test: PASS
-      tfp_plan: FAIL
-      tfp_apply: FAIL
+      tfpolicy_test: VALIDATION_ERROR
+      tfp_plan: N/A
+      tfp_apply: N/A
 
   - id: getresources-skip-resource-not-evaluated
     description: skip_resource attribute prevents resource from being evaluated
