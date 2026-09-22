@@ -1501,3 +1501,43 @@ test_cases:
       tfpolicy_test: PASS
       tfp_plan: PASS
       tfp_apply: PASS
+
+  - id: feature-func-core-alltrue-l1
+    description: core::alltrue returns true only when every element is true
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-func-core-anytrue-l1
+    description: core::anytrue returns true when at least one element is true
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: operations-create-delete-combo-validation-error
+    description: operations list combining create and delete is rejected (core v0.5.1)
+    suite: EC-OP
+    expect:
+      tfpolicy_test: VALIDATION_ERROR
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: regression-file-locals-reference-attrs-rejected
+    description: file-level locals referencing attrs/prior_attrs now fail validation (core v0.5.1)
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: VALIDATION_ERROR
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-expr-meta-tfe-scope-l1
+    description: meta.tfe_stack / meta.tfe_workspace references validate and test locally
+    suite: FEATURE-REG
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A

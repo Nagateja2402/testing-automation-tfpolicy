@@ -1,0 +1,11 @@
+policytest {
+  targets = ["file_locals_attrs.policy.hcl"]
+}
+
+resource "aws_s3_bucket" "any_resource" {
+  expect_failure = false
+  attrs = {
+    bucket = "my-bucket"
+  }
+  meta = { provider_type = "aws" }
+}
