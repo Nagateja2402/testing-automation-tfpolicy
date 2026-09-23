@@ -83,7 +83,7 @@ type Config struct {
 	RunTimeoutMins int
 
 	// Local mode binary paths — resolved from env vars or defaults.
-	TFPolicyBin    string // tfpcli binary
+	TFPolicyBin    string // tfpolicy binary
 	TFPBin         string // tfp binary
 	TFPolicyPlugin string // tfpolicy-plugin binary (required for local tfp plan/apply)
 }

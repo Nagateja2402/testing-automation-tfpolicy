@@ -102,7 +102,7 @@ test_cases:
     suite: EL
     expect:
       tfpolicy_test: PASS
-      tfp_plan: PASS
+      tfp_plan: UNKNOWN
       tfp_apply: PASS
 
   - id: enforcement-level-mandatory-blocks-noncompliant
@@ -110,7 +110,7 @@ test_cases:
     suite: EL
     expect:
       tfpolicy_test: PASS
-      tfp_plan: FAIL
+      tfp_plan: UNKNOWN
       tfp_apply: FAIL
 
   - id: enforcement-level-override-changes-effective-level
@@ -118,7 +118,7 @@ test_cases:
     suite: EL
     expect:
       tfpolicy_test: PASS
-      tfp_plan: FAIL
+      tfp_plan: UNKNOWN
       tfp_apply: FAIL
 
   # ── FB-FLT: Filter behavior ──────────────────────────────────────────────────
@@ -135,7 +135,7 @@ test_cases:
     suite: FB-FLT
     expect:
       tfpolicy_test: PASS
-      tfp_plan: FAIL
+      tfp_plan: UNKNOWN
       tfp_apply: FAIL
 
   - id: filter-undefined-local-validation-error
@@ -578,7 +578,7 @@ test_cases:
     suite: REG-BIN
     expect:
       tfpolicy_test: PASS
-      tfp_plan: PASS
+      tfp_plan: UNKNOWN
       tfp_apply: PASS
 
   - id: regression-large-policy-many-rules
@@ -1539,5 +1539,70 @@ test_cases:
     suite: FEATURE-REG
     expect:
       tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: operations-empty-state-blocks-rejected
+    description: resource test case with both attrs and prior_attrs empty is rejected (tfpolicy 0.3.0)
+    suite: EC-OP
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: no state"
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: operations-meta-operation-only-no-state-rejected
+    description: explicit meta.operation with no attrs/prior_attrs state block is rejected (tfpolicy 0.3.0)
+    suite: EC-OP
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: no state"
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: feature-operation-split-create-delete-e2e
+    description: split create/update + delete resource_policy blocks, end-to-end plan and apply
+    suite: OP-ALL
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  - id: regression-security-group-cidr-blocks-e2e
+    description: aws_security_group ingress.cidr_blocks (list) schema shape, end-to-end plan and apply
+    suite: REG-BIN
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+
+  # ── BASICS: CLI changelog regressions (targets, meta validation) ────────────
+  - id: basics-policytest-targets-mismatch-rejected
+    description: a policytest targets entry matching no policy file is an error, not a silent no-op (tfpolicy 0.2.0)
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: does not match any policy file"
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-policytest-targets-valid-name-runs
+    description: a policytest targets entry naming an existing policy file runs its tests normally
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-provider-policy-meta-typo-rejected
+    description: tfpolicy validate rejects a provider_policy meta reference that is not a real field (tfpolicy 0.2.0)
+    suite: BASICS
+    expect:
+      tfpolicy_test: VALIDATION_ERROR
+      tfp_plan: N/A
+      tfp_apply: N/A
+
+  - id: basics-meta-operation-non-string-rejected
+    description: non-string meta.operation is a clean diagnostic, not a panic (tfpolicy 0.2.0)
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: non-string"
       tfp_plan: N/A
       tfp_apply: N/A

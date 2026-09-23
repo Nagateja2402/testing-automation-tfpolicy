@@ -26,7 +26,7 @@ Usage:
 
 Flags:
   --cloud         Run on HCP Terraform staging (default: local execution)
-  --skip-tfp      Local mode only: skip tfp plan/apply (tfpcli level only)
+  --skip-tfp      Local mode only: skip tfp plan/apply (tfpolicy level only)
   --test-dir      Path to regression-testing/tests/ directory (default: ./tests)
   --index         Path to index.yml (default: <parent of test-dir>/index.yml)
   --test-id       Run only these test case ID(s) — single or comma-separated (default: run all)
@@ -47,7 +47,7 @@ Flags:
   --vcs-branch    Branch to ingest policies from (env: VCS_BRANCH, default: main)
 
   Local mode only:
-  --tfpolicy-bin  Path to tfpcli binary (env: TFPOLICY_BIN, default: tfpcli)
+  --tfpolicy-bin  Path to tfpolicy binary (env: TFPOLICY_BIN, default: tfpolicy)
   --tfp-bin       Path to tfp binary (env: TFP_BIN, default: tfp)
   --plugin        Path to tfpolicy-plugin binary (env: TF_POLICY_PLUGIN)
 
@@ -55,7 +55,7 @@ Examples:
   # Local, all tests
   cloud-runner
 
-  # Local, single test, tfpcli only
+  # Local, single test, tfpolicy only
   cloud-runner --skip-tfp --test-id getresources-vpc-has-compliant-flow-log-passes
 
   # Local, multiple specific tests (comma-separated)
@@ -101,7 +101,7 @@ func main() {
 	fs.IntVar(&cfg.RunTimeoutMins, "timeout", config.DefaultRunTimeoutMins, "Per-run timeout (minutes)")
 
 	// Local-only
-	fs.StringVar(&cfg.TFPolicyBin, "tfpolicy-bin", config.DefaultTFPolicyBin, "Path to tfpcli binary")
+	fs.StringVar(&cfg.TFPolicyBin, "tfpolicy-bin", config.DefaultTFPolicyBin, "Path to tfpolicy binary")
 	fs.StringVar(&cfg.TFPBin, "tfp-bin", config.DefaultTFPBin, "Path to tfp binary")
 	fs.StringVar(&cfg.TFPolicyPlugin, "plugin", "", "Path to tfpolicy-plugin binary (env: TF_POLICY_PLUGIN)")
 
@@ -247,7 +247,7 @@ func printLocalHeader(cfg *config.Config, count int) {
 	fmt.Println()
 	fmt.Println("══════════════════════════════════════════════════════════════════")
 	fmt.Println("  cloud-runner — local mode")
-	fmt.Printf("  tfpcli     : %s\n", cfg.TFPolicyBin)
+	fmt.Printf("  tfpolicy   : %s\n", cfg.TFPolicyBin)
 	fmt.Printf("  tfp        : %s\n", cfg.TFPBin)
 	if cfg.TFPolicyPlugin != "" {
 		fmt.Printf("  plugin     : %s\n", cfg.TFPolicyPlugin)
@@ -379,7 +379,7 @@ func runCloud(cfg *config.Config, idx *index.Index, _ bool) {
 	}
 	fmt.Printf("  Project ID : %s\n\n", projectID)
 
-	// Results directory for L1 (tfpcli) logs — same layout as local mode.
+	// Results directory for L1 (tfpolicy) logs — same layout as local mode.
 	resultsDir := filepath.Join(filepath.Dir(cfg.TestDir), "results")
 	if err := os.MkdirAll(resultsDir, 0o755); err != nil {
 		fatal("creating results dir: %v", err)
@@ -436,7 +436,7 @@ func printCloudHeader(cfg *config.Config, count int) {
 	fmt.Printf("  Org        : %s\n", cfg.Org)
 	fmt.Printf("  Project    : %s\n", cfg.Project)
 	fmt.Printf("  TF version : %s\n", cfg.TFVersion)
-	fmt.Printf("  tfpcli     : %s  (L1 runs locally)\n", cfg.TFPolicyBin)
+	fmt.Printf("  tfpolicy   : %s  (L1 runs locally)\n", cfg.TFPolicyBin)
 	fmt.Printf("  Cleanup    : %v\n", cfg.Cleanup)
 	fmt.Printf("  Parallel   : %d\n", cfg.Parallel)
 	fmt.Printf("  Timeout    : %dm\n", cfg.RunTimeoutMins)
