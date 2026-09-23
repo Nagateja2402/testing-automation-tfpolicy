@@ -72,6 +72,32 @@ jobs:
           sudo install -m 0755 "${RUNNER_TEMP}/tfpolicy/tfpolicy" /usr/local/bin/tfpolicy
           tfpolicy version
 
+      - name: Warm tfpolicy provider schema cache
+        # cloud-runner runs test cases with --parallel 5, and on a cold cache
+        # (fresh runner) multiple `tfpolicy test` processes race to download
+        # and extract the same AWS provider into tfpolicy's shared,
+        # unlocked cache dir. Losers of the race fail with "Could not
+        # acquire provider schema" even though the fixture is correct.
+        # Acquiring the schema once here, sequentially, before the parallel
+        # run starts avoids the race.
+        run: |
+          set -euo pipefail
+
+          warm_dir="${RUNNER_TEMP}/tfpolicy-cache-warm"
+          mkdir -p "${warm_dir}"
+          {
+            printf 'policy {\n'
+            printf '  required_providers {\n'
+            printf '    aws = {\n'
+            printf '      source  = "hashicorp/aws"\n'
+            printf '      version = ">= 6.65.0, < 7.0.0"\n'
+            printf '    }\n'
+            printf '  }\n'
+            printf '}\n'
+          } > "${warm_dir}/warm.policy.hcl"
+          tfpolicy validate --policies="${warm_dir}"
+          rm -rf "${warm_dir}"
+
       - name: Resolve cloud-runner inputs
         id: config
         working-directory: cloud-runner
