@@ -48,7 +48,7 @@ jobs:
           go-version-file: cloud-runner/go.mod
           cache-dependency-path: cloud-runner/go.sum
 
-      - name: Install latest tfpcli
+      - name: Install latest tfpolicy
         run: |
           set -euo pipefail
 
