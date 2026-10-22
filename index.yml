@@ -1606,3 +1606,704 @@ test_cases:
       tfpolicy_test: "ERROR_CONTAINS: non-string"
       tfp_plan: N/A
       tfp_apply: N/A
+
+  - id: provider-policy-filter-region-passes
+    description: 'provider_policy filter attrs.region==us-east-1 evaluates only the matching provider (2 providers), enforce passes'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-filter-missing-default-tags-blocks
+    description: 'provider_policy filter matches us-east-1 provider; enforce (default_tags required) fails, other provider skipped by filter'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-filter-address-passes
+    description: 'module_policy filter meta.address==module.s3_match; enforce meta.source passes (meta-based)'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-filter-address-source-mismatch-blocks
+    description: 'module_policy filter meta.address==module.s3_match; enforce meta.source==./modules/other fails (blocked at init)'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: provider-policy-input-region-passes
+    description: 'provider_policy filter+enforce driven by input.region default us-east-1 passes'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-input-region-missing-default-tags-blocks
+    description: 'provider_policy input.region filter matches, enforce (default_tags required) fails with input in message'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-input-source-passes
+    description: 'module_policy meta.source == input.expected_source (default ./modules/s3) passes'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-input-source-mismatch-blocks
+    description: 'module_policy meta.source == input.expected_source (default ./modules/other) fails for module.s3_match'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: filter-input-mismatch-skips-policy
+    description: 'resource_policy filter attrs.engine_name==input.engine is false (postgres vs mysql): policy skipped, not failed'
+    suite: FB-FLT
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: N/A
+  - id: basics-resource-locals-cloudtrail-blocks
+    description: 'resource_policy file-level + policy-level locals; cloudtrail without log file validation fails with local-derived message'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: provider-policy-locals-region-passes
+    description: 'provider_policy policy-level locals compare attrs.region to a file-level local: us-east-1 passes'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-locals-region-blocks
+    description: 'provider_policy policy-level locals: provider region us-west-2 != allowed us-east-1 fails'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-locals-address-passes
+    description: 'module_policy policy-level locals (prefix + expected) meta.address==local.expected passes'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-locals-address-blocks
+    description: 'module_policy policy-level locals: meta.address != module.missing fails at init'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-resource-undefined-local-rejected
+    description: 'resource_policy referencing an undefined local is a setup error naming the local (Undefined Reference)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Undefined Reference"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: provider-policy-try-region-passes
+    description: 'provider_policy core::try(attrs.region,"") == us-east-1 passes'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-try-missing-region-blocks
+    description: 'provider_policy core::try on provider without region: null attr -> Condition not met (no crash)'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-try-version-passes
+    description: 'module_policy core::try(semverconstraint(meta.version,">= 1.0.0"),false) passes for registry module v1.0.2'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-try-missing-version-blocks
+    description: 'module_policy core::try(semverconstraint(meta.version,...),false): local module has no version -> default false fails'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-try-null-attrs-blocks
+    description: 'resource_policy core::try on null/nonexistent attrs fails gracefully with Condition not met (no crash)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-combined-conditions-passes
+    description: 'module_policy 3 combined conditions (source, address regex, no version) all true'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-combined-conditions-blocks
+    description: 'module_policy 3 combined conditions: module bad_name violates address regex ^module\.s3_ (blocked at init)'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-multiple-policies-dms-ssl-mode-blocks
+    description: '3 separate resource_policies on aws_dms_endpoint: engine/endpoint_id pass, ssl_mode=none fails with its own message'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: provider-policy-range-index-passes
+    description: 'provider_policy locals use core::range + for-expression index lookup; us-east-1 index>=0 passes'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-range-index-blocks
+    description: 'provider_policy range index lookup: eu-west-1 not in allowed list (idx -1) fails'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-range-index-passes
+    description: 'module_policy range index lookup of meta.address in allowed list passes'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-range-index-blocks
+    description: 'module_policy range index lookup: module.rogue not in allowed list fails at init'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: provider-policy-multiple-enforce-passes
+    description: 'provider_policy with two enforce blocks (meta.type, attrs.region) both passing'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-multiple-enforce-second-blocks
+    description: 'provider_policy two enforce blocks: second (region==eu-west-1) fails, message identifies enforce2'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-multiple-enforce-passes
+    description: 'module_policy with two enforce blocks both passing'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-multiple-enforce-second-blocks
+    description: 'module_policy two enforce blocks: second (meta.source==./modules/other) fails, blocked at init'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-count-instances-all-compliant-passes
+    description: 'resource_policy evaluated across count=3 buckets, all compliant'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: basics-for-each-one-instance-blocks
+    description: 'resource_policy across for_each buckets: bad-bucket fails, others pass'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: provider-policy-aliases-all-allowed-passes
+    description: 'provider_policy across 3 aws provider configs (default/west/east2) all in allowed regions'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-alias-disallowed-blocks
+    description: 'provider_policy across aliases: alias in eu-west-1 fails'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-for-each-instances-passes
+    description: 'module_policy with module for_each (3 instances) all satisfy meta.source'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-multiple-calls-one-bad-blocks
+    description: 'module_policy meta.address != module.q_bad: q_bad call fails at init, q_a/q_b pass'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-count-zero-nothing-to-evaluate-passes
+    description: 'resource_policy with count=0 resource: nothing to evaluate, clean pass (planned_and_finished)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: basics-ternary-conditional-attrs-blocks
+    description: 'resource_policy ternary (force_destroy ? object_lock_enabled==false : true): force_destroy with object lock fails, object lock without force_destroy passes'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: provider-policy-ternary-default-tags-passes
+    description: 'provider_policy ternary (region us-east-1 ? default_tags Env==prod : true) passes with Env=prod'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-ternary-default-tags-blocks
+    description: 'provider_policy ternary: us-east-1 provider without default_tags fails'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-ternary-source-passes
+    description: 'module_policy ternary (address==module.q ? source==./modules/q : true) passes'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-ternary-source-blocks
+    description: 'module_policy ternary (address==module.q ? source==./modules/other : true) fails at init'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: e2e-ternary-unknown-at-plan-resolves-pass-at-apply
+    description: 'ternary driven by terraform_data.x.id (unknown at plan): UNKNOWN at plan, resolves to pass at apply (terraform_data only, no AWS resources); L1 N/A: tfpolicy 0.4.0 cannot acquire a schema for the builtin terraform provider'
+    suite: TF-E2E
+    expect:
+      tfpolicy_test: N/A
+      tfp_plan: UNKNOWN
+      tfp_apply: PASS
+  - id: provider-policy-default-tags-map-passes
+    description: 'provider_policy default_tags map must include Env=prod: passes'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-default-tags-map-blocks
+    description: 'provider_policy default_tags map without Env=prod fails'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-attrs-map-defers-unknown
+    description: 'KNOWN ISSUE: module_policy referencing attrs.tags stays Unknown (deferred) at init/plan/apply instead of evaluating with module inputs; currently-true expectation is plan UNKNOWN'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: UNKNOWN
+      tfp_apply: UNKNOWN
+  - id: module-policy-attrs-map-missing-key-defers-unknown
+    description: 'KNOWN ISSUE: module_policy attrs.tags missing owner key should fail but stays Unknown (deferred) at init/plan/apply; currently-true expectation is plan UNKNOWN'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: UNKNOWN
+      tfp_apply: UNKNOWN
+  - id: basics-empty-and-null-tags-map-blocks
+    description: 'resource_policy on empty {} and null tags map: no crash, Condition not met with clear message for both'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: provider-policy-regex-region-passes
+    description: 'provider_policy core::regex_match(attrs.region, ^us-(east|west)-[0-9]$) passes for us-east-1'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-regex-region-blocks
+    description: 'provider_policy core::regex_match region regex fails for eu-west-1'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-regex-address-passes
+    description: 'module_policy core::regex_match(meta.address, ^module\.[a-z]+$) passes for module.q'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-regex-address-blocks
+    description: 'module_policy core::regex_match(meta.address, ^module\.[a-z]+$) fails for module.Bad_Name at init'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-regex-special-characters-tag-blocks
+    description: 'regex name-tag convention fails deterministically on unicode/quotes/<>&/backslash tag value; message renders intact'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: operation-create-meta-operation-force-destroy-blocks
+    description: 'resource_policy meta.operation=="create" && force_destroy==true fails on force_destroy=false (message shows operation=create)'
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: provider-policy-meta-type-passes
+    description: 'provider_policy meta.type=="aws" passes'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-meta-type-blocks
+    description: 'provider_policy meta.type=="google" fails at init for aws provider'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: module-policy-meta-source-passes
+    description: 'module_policy meta.source==./modules/q passes (info_message shows source)'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: module-policy-meta-address-blocks
+    description: 'module_policy meta.address mismatch (module.s3q vs module.expected_other) fails at init; message names address and source'
+    suite: PP-MOD
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-meta-missing-field-try-default-passes
+    description: 'resource_policy filter meta.operation==create + core::try on missing meta.workspace_tag: no crash, falls back to default and passes'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: basics-jsondecode-malformed-value-errors
+    description: 'resource_policy core::jsondecode on malformed JSON attribute surfaces a clear function-call error (not a crash)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: core::jsondecode"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-timestamp-past-expiry-blocks
+    description: 'resource_policy core::timecmp(attrs.value, core::timestamp())>0 fails for a 2020 expiry'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-timestamp-invalid-date-errors
+    description: 'core::timecmp on a non-RFC3339 value surfaces Invalid function argument naming the bad value (not a crash)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: 'ERROR_CONTAINS: Invalid value for "timestamp_a" parameter'
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-getdatasource-aws-region-passes
+    description: 'resource_policy core::getdatasource("aws_region") region == us-east-1 passes'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: basics-getdatasource-aws-region-blocks
+    description: 'resource_policy core::getdatasource("aws_region") region != required us-west-2 fails'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-getdatasource-missing-errors
+    description: 'core::getdatasource of a nonexistent aws_s3_bucket surfaces a clear data-source lookup error'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: core::getdatasource"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: enforcement-level-misspelled-mandatory-override-rejected
+    description: 'KNOWN ISSUE: misspelled enforcement_level "mandatory_override" is not rejected at init/policy-set setup; it only errors per resource at plan (Invalid enforcement level, allowed values listed)'
+    suite: EL
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Invalid enforcement level"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-sensitive-input-masked-blocks
+    description: 'sensitive input used in condition and error_message: policy fails and secret is rendered as (sensitive value)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-sensitive-input-empty-default-passes
+    description: 'sensitive input with empty-string default evaluates correctly (no crash)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: operation-create-wildcard-s3-versioning-blocks
+    description: 'resource_policy "aws_s3_*" operations=[create] matches aws_s3_bucket; versioning disabled fails'
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: operation-create-wildcard-terraform-data-passes
+    description: 'resource_policy "terraform_*" operations=[create] on terraform_data: create of input=prod passes at plan and apply (terraform_data only, no AWS resources); L1 N/A: tfpolicy 0.4.0 cannot acquire a schema for the builtin terraform provider (wildcard matches no known types)'
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: N/A
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: operation-create-policy-locals-allowed-tiers-blocks
+    description: 'create-scoped resource_policy using policy-level locals (allowed tiers list): bronze denied with local-driven message'
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: operation-create-policy-input-prod-encryption-blocks
+    description: 'create-scoped resource_policy driven by input.environment=prod: tags.encryption=none denied'
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: operation-create-and-update-policies-only-create-evaluated-blocks
+    description: 'create+update scoped failing policies on a create: only the create policy is evaluated; no-op skips both'
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: enforce-two-create-policies-worst-result-blocks
+    description: 'two create policies on same resource: first passes, second fails -> deny (worst result wins)'
+    suite: EC-ENF
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: operation-meta-operation-in-enforce-create-passes
+    description: 'enforce condition meta.operation=="create": passes on create, fails on update'
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: operation-meta-operation-in-filter-skips-create-passes
+    description: 'filter meta.operation=="delete" is false on create/update: policy skipped, no enforce diagnostics'
+    suite: OP-CRE
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: operations-value-case-sensitive-rejected
+    description: 'operations=["Create"] (capitalised) is a setup error: Invalid operation, must be create/update/delete/no-op'
+    suite: EC-OP
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Invalid operation"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: enforce-two-instance-create-policies-second-blocks
+    description: 'two aws_instance create policies: first passes, second fails -> deny with second message'
+    suite: EC-ENF
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: enforce-error-and-info-message-both-present-blocks
+    description: 'enforce with both error_message and info_message on a failing condition: both emitted'
+    suite: EC-ENF
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-resource-policy-attrs-not-evaluated-at-init-passes
+    description: 'resource_policy using attrs in filter+enforce is not evaluated at init (no attrs-namespace error) and evaluates at plan'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-attrs-local-filter-defers-at-init-passes
+    description: 'provider_policy attrs via policy local + filter: Unknown at init (deferred), passes at plan'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-and-module-policy-meta-input-only-passes
+    description: 'provider_policy and module_policy using only meta/input pass at init and plan, no attrs diagnostic'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: provider-policy-unset-region-blocks
+    description: 'provider_policy attrs.region on provider without region: deferred at init, evaluated at plan with unset value and fails deterministically'
+    suite: PP-PROV
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-init-safe-provider-and-plan-attrs-resource-passes
+    description: 'init-safe provider_policy (meta/input/locals) passes; resource_policy attrs evaluated only at plan and passes'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: basics-required-input-without-value-rejected
+    description: 'required input without default/value is a setup error: Null input value (distinct from a policy failure)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Null input value"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-unsupported-argument-in-enforce-rejected
+    description: 'unsupported argument in enforce block is a clear setup error (Unsupported argument), not a generic failure'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Unsupported argument"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-input-defined-in-other-file-passes
+    description: 'input defined in a.policy.hcl is accessible from a resource_policy in b.policy.hcl'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: basics-duplicate-input-across-files-rejected
+    description: 'same input name defined in two policy files is a setup error (Duplicate input block)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Duplicate input block"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-duplicate-set-level-local-across-files-rejected
+    description: 'same set-level local defined in two policy files is a setup error (Duplicate local expression)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Duplicate local expression"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-duplicate-resource-policy-across-files-rejected
+    description: 'same resource_policy label defined in two files is a setup error (Duplicate resource policy block)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Duplicate resource policy block"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-duplicate-provider-policy-across-files-rejected
+    description: 'same provider_policy label defined in two files is a setup error (Duplicate provider policy block)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Duplicate provider policy block"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-duplicate-module-policy-across-files-rejected
+    description: 'same module_policy label defined in two files is a setup error (Duplicate module policy block)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Duplicate module policy block"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-policy-local-conflicts-with-set-level-local-rejected
+    description: 'policy-scoped local with same name as a set-level local is a setup error (Duplicate local expression)'
+    suite: BASICS
+    expect:
+      tfpolicy_test: "ERROR_CONTAINS: Duplicate local expression"
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-policy-scoped-locals-repeat-across-policies-passes
+    description: 'same policy-scoped local name (x) in two different policies is allowed; each uses its own value'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: basics-var-syntax-for-input-rejected
+    description: 'KNOWN ISSUE: var.<name> syntax for inputs is rejected (Unknown reference: root of a traversal must be one of input, local, attrs, meta, or prior_attrs); only input.<name> works'
+    suite: BASICS
+    expect:
+      tfpolicy_test: VALIDATION_ERROR
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-cross-file-inputs-helpers-ec2-blocks
+    description: 'inputs/helpers/s3/ec2 policy files share input+local: s3 (env=prod) passes, ec2 (env=dev) fails with shared-input message'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: FAIL
+      tfp_apply: FAIL
+  - id: basics-unique-names-within-single-file-passes
+    description: 'unique inputs and policy names within a single file are valid; both s3 policies evaluate independently'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS
+  - id: basics-getresources-cross-file-lookup-passes
+    description: 'core::getresources lookup for aws_s3_bucket_logging from a policy in another file passes for cloudtrail bucket'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: N/A
+  - id: basics-getdatasource-cross-file-lookup-passes
+    description: 'core::getdatasource("aws_region") lookup from a policy in another file resolves and passes'
+    suite: BASICS
+    expect:
+      tfpolicy_test: PASS
+      tfp_plan: PASS
+      tfp_apply: PASS

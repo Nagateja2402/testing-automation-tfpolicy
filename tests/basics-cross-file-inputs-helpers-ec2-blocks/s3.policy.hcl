@@ -1,0 +1,16 @@
+# Copyright (c) HashiCorp, Inc.
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.65.0, < 7.0.0"
+    }
+  }
+}
+
+resource_policy "aws_s3_bucket" "tagged" {
+  enforce {
+    condition     = core::try(attrs.tags[local.required_tag_key], "") == input.required_env
+    error_message = "s3 bucket needs tag ${local.required_tag_key}=${input.required_env}"
+  }
+}
